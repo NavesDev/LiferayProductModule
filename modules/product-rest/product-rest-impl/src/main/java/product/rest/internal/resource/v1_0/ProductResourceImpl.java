@@ -5,6 +5,8 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -12,6 +14,7 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -45,19 +48,44 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	public Response deleteSiteProduct(Long siteId, Long productId)
 		throws Exception {
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"deleteSiteProduct(siteId=" + siteId + ", productId=" +
+					productId + ")");
+		}
+
 		_validateProductSite(siteId, productId);
 
 		_productLocalService.deleteProduct(productId);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"deleteSiteProduct completed for productId=" + productId);
+		}
 
 		return Response.noContent().build();
 	}
 
 	@Override
 	public Product getSiteProduct(Long siteId, Long productId) throws Exception {
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"getSiteProduct(siteId=" + siteId + ", productId=" + productId +
+					")");
+		}
+
 		product.service.model.Product serviceProduct = _validateProductSite(
 			siteId, productId);
 
-		return _toDTO(serviceProduct, siteId);
+		Product dtoProduct = _toDTO(serviceProduct, siteId);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"getSiteProduct completed for productId=" +
+					dtoProduct.getId());
+		}
+
+		return dtoProduct;
 	}
 
 	@Override
@@ -68,8 +96,22 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception {
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"getSiteProductsPage(siteId=" + siteId + ", search=" + search +
+					", status=" + status + ", categoryId=" + categoryId +
+					", tagId=" + tagId + ", inStock=" + inStock + ", pagination=" +
+					(pagination != null) + ")");
+		}
+
 		List<product.service.model.Product> products = _productLocalService.getProducts(
 			0, Integer.MAX_VALUE);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"getSiteProductsPage loaded " + products.size() +
+					" products before filtering");
+		}
 
 		List<Product> filtered = products.stream(
 		).map(
@@ -80,7 +122,17 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		_applySort(filtered, sorts);
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"getSiteProductsPage filtered size=" + filtered.size());
+		}
+
 		if (pagination == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"getSiteProductsPage returning full filtered result");
+			}
+
 			return Page.of(filtered);
 		}
 
@@ -88,7 +140,18 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		int end = Math.min(pagination.getEndPosition(), filtered.size());
 
 		if (start >= filtered.size()) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"getSiteProductsPage start position out of range: " + start);
+			}
+
 			return Page.of(new ArrayList<>());
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"getSiteProductsPage returning paged result start=" + start +
+					", end=" + end);
 		}
 
 		return Page.of(filtered.subList(start, end));
@@ -96,6 +159,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Override
 	public Product postSiteProduct(Long siteId, Product product) throws Exception {
+		if (_log.isDebugEnabled()) {
+			_log.debug("postSiteProduct(siteId=" + siteId + ")");
+		}
+
 		_validatePayload(product);
 
 		product.service.model.Product createdProduct = _productLocalService.addProduct(
@@ -105,12 +172,25 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
 			_createServiceContext(siteId));
 
-		return _toDTO(createdProduct, siteId);
+		Product dtoProduct = _toDTO(createdProduct, siteId);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"postSiteProduct completed for productId=" + dtoProduct.getId());
+		}
+
+		return dtoProduct;
 	}
 
 	@Override
 	public Product putSiteProduct(Long siteId, Long productId, Product product)
 		throws Exception {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"putSiteProduct(siteId=" + siteId + ", productId=" + productId +
+					")");
+		}
 
 		_validatePayload(product);
 		_validateProductSite(siteId, productId);
@@ -122,13 +202,26 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
 			_createServiceContext(siteId));
 
-		return _toDTO(updatedProduct, siteId);
+		Product dtoProduct = _toDTO(updatedProduct, siteId);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"putSiteProduct completed for productId=" + dtoProduct.getId());
+		}
+
+		return dtoProduct;
 	}
 
 	@Override
 	public Product putSiteProductCategories(
 			Long siteId, Long productId, ProductCategories productCategories)
 		throws Exception {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"putSiteProductCategories(siteId=" + siteId + ", productId=" +
+					productId + ")");
+		}
 
 		if (productCategories == null) {
 			throw new BadRequestException("Product categories payload is required");
@@ -140,13 +233,27 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				productId, _toLongArray(productCategories.getCategoryIds()),
 				_createServiceContext(siteId));
 
-		return _toDTO(updatedProduct, siteId);
+		Product dtoProduct = _toDTO(updatedProduct, siteId);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"putSiteProductCategories completed for productId=" +
+					dtoProduct.getId());
+		}
+
+		return dtoProduct;
 	}
 
 	@Override
 	public Product putSiteProductTags(
 			Long siteId, Long productId, ProductTags productTags)
 		throws Exception {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"putSiteProductTags(siteId=" + siteId + ", productId=" +
+					productId + ")");
+		}
 
 		if (productTags == null) {
 			throw new BadRequestException("Product tags payload is required");
@@ -158,13 +265,25 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				productId, _toLongArray(productTags.getTagIds()),
 				_createServiceContext(siteId));
 
-		return _toDTO(updatedProduct, siteId);
+		Product dtoProduct = _toDTO(updatedProduct, siteId);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"putSiteProductTags completed for productId=" +
+					dtoProduct.getId());
+		}
+
+		return dtoProduct;
 	}
 
 	private void _applySort(
 		List<Product> products, com.liferay.portal.kernel.search.Sort[] sorts) {
 
 		if (ArrayUtil.isEmpty(sorts)) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("_applySort skipped because sorts are empty");
+			}
+
 			return;
 		}
 
@@ -186,6 +305,11 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		}
 
 		if (comparator == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_applySort skipped unsupported field=" + fieldName);
+			}
+
 			return;
 		}
 
@@ -194,6 +318,12 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		}
 
 		products.sort(comparator);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_applySort applied field=" + fieldName + ", reverse=" +
+					sort.isReverse());
+		}
 	}
 
 	private ServiceContext _createServiceContext(long siteId) {
@@ -203,11 +333,22 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		serviceContext.setScopeGroupId(siteId);
 		serviceContext.setUserId(contextUser.getUserId());
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_createServiceContext(siteId=" + siteId + ", companyId=" +
+					contextCompany.getCompanyId() + ", userId=" +
+					contextUser.getUserId() + ")");
+		}
+
 		return serviceContext;
 	}
 
 	private int _defaultInteger(Integer value) {
 		if (value == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("_defaultInteger applying fallback 0");
+			}
+
 			return 0;
 		}
 
@@ -216,6 +357,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	private double _defaultDouble(Double value) {
 		if (value == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("_defaultDouble applying fallback 0D");
+			}
+
 			return 0D;
 		}
 
@@ -256,6 +401,11 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		if ((inStock != null) && (inStock != productInStock)) {
 			return false;
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_matchesFilters accepted productId=" + product.getId());
 		}
 
 		return true;
@@ -305,8 +455,22 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			}
 		}
 		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_toDTO failed loading asset metadata for productId=" +
+						product.getProductId(),
+					portalException);
+			}
+
 			dtoProduct.setCategoryIds(new Long[0]);
 			dtoProduct.setTagIds(new Long[0]);
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_toDTO mapped productId=" + product.getProductId() +
+					" to categoryCount=" + dtoProduct.getCategoryIds().length +
+					", tagCount=" + dtoProduct.getTagIds().length);
 		}
 
 		return dtoProduct;
@@ -354,6 +518,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	private long[] _toLongArray(Long[] values) {
 		if (values == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("_toLongArray returning empty array for null input");
+			}
+
 			return new long[0];
 		}
 
@@ -361,6 +529,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		for (int i = 0; i < values.length; i++) {
 			array[i] = values[i];
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("_toLongArray converted values=" + Arrays.toString(values));
 		}
 
 		return array;
@@ -373,11 +545,20 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			array[i] = values[i];
 		}
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_toLongObjectArray converted length=" + values.length);
+		}
+
 		return array;
 	}
 
 	private Long[] _toTagIds(long siteId, String[] tagNames) {
 		if (ArrayUtil.isEmpty(tagNames)) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("_toTagIds returning empty array for empty tagNames");
+			}
+
 			return new Long[0];
 		}
 
@@ -391,10 +572,20 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			}
 		}
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_toTagIds resolved " + tagIds.size() + " tags for siteId=" +
+					siteId + ", tagNames=" + Arrays.toString(tagNames));
+		}
+
 		return tagIds.toArray(new Long[0]);
 	}
 
 	private void _validatePayload(Product product) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("_validatePayload(productNull=" + (product == null) + ")");
+		}
+
 		if (product == null) {
 			throw new BadRequestException("Product payload is required");
 		}
@@ -404,12 +595,23 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			Long siteId, Long productId)
 		throws Exception {
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_validateProductSite(siteId=" + siteId + ", productId=" +
+					productId + ")");
+		}
+
 		product.service.model.Product product = _productLocalService.getProduct(
 			productId);
 
 		if (!Objects.equals(product.getGroupId(), siteId)) {
 			throw new BadRequestException(
 				"Product does not belong to the provided siteId");
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_validateProductSite accepted productId=" + productId);
 		}
 
 		return product;
@@ -423,5 +625,8 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Reference
 	private ProductLocalService _productLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ProductResourceImpl.class);
 
 }

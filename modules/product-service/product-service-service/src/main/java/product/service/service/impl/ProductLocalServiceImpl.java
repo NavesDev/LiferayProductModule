@@ -12,6 +12,8 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -46,6 +48,14 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			double price, int status, int stockQuantity, long[] categoryIds,
 			long[] tagIds, ServiceContext serviceContext)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"addProduct(userId=" + userId + ", groupId=" + groupId +
+					", status=" + status + ", stockQuantity=" + stockQuantity +
+					", categoryIds=" + Arrays.toString(categoryIds) +
+					", tagIds=" + Arrays.toString(tagIds) + ")");
+		}
 
 		_validate(status, stockQuantity, name, description, price, categoryIds);
 
@@ -83,16 +93,32 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 
 		_updateAsset(product, validatedCategoryIds, tagNames, serviceContext);
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"addProduct completed for productId=" + product.getProductId() +
+					", status=" + product.getStatus());
+		}
+
 		return product;
 	}
 
 	@Override
 	public Product deleteProduct(long productId) throws PortalException {
+		if (_log.isDebugEnabled()) {
+			_log.debug("deleteProduct(productId=" + productId + ")");
+		}
+
 		return deleteProduct(productPersistence.findByPrimaryKey(productId));
 	}
 
 	@Override
 	public Product deleteProduct(Product product) {
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"deleteProduct(productId=" + product.getProductId() +
+					", groupId=" + product.getGroupId() + ")");
+		}
+
 		_deleteAssetEntry(product.getProductId());
 
 		try {
@@ -101,10 +127,25 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 				ResourceConstants.SCOPE_INDIVIDUAL, product.getProductId());
 		}
 		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"deleteProduct failed to remove resource for productId=" +
+						product.getProductId(),
+					portalException);
+			}
+
 			throw new SystemException(portalException);
 		}
 
-		return productPersistence.remove(product);
+		Product removedProduct = productPersistence.remove(product);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"deleteProduct completed for productId=" +
+					removedProduct.getProductId());
+		}
+
+		return removedProduct;
 	}
 
 	public Product updateProduct(
@@ -112,6 +153,14 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			int status, int stockQuantity, long[] categoryIds, long[] tagIds,
 			ServiceContext serviceContext)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProduct(productId=" + productId + ", status=" + status +
+					", stockQuantity=" + stockQuantity + ", categoryIds=" +
+					Arrays.toString(categoryIds) + ", tagIds=" +
+					Arrays.toString(tagIds) + ")");
+		}
 
 		Product product = productPersistence.findByPrimaryKey(productId);
 
@@ -134,12 +183,24 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			product, _validateCategories(product.getGroupId(), categoryIds),
 			_resolveTagNames(product.getGroupId(), tagIds), serviceContext);
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProduct completed for productId=" + product.getProductId() +
+					", status=" + product.getStatus());
+		}
+
 		return product;
 	}
 
 	public Product updateProductCategories(
 			long productId, long[] categoryIds, ServiceContext serviceContext)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProductCategories(productId=" + productId +
+					", categoryIds=" + Arrays.toString(categoryIds) + ")");
+		}
 
 		Product product = productPersistence.findByPrimaryKey(productId);
 
@@ -159,12 +220,24 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			product, validatedCategoryIds, _getAssetTagNames(productId),
 			serviceContext);
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProductCategories completed for productId=" + productId +
+					", categoryCount=" + validatedCategoryIds.length);
+		}
+
 		return product;
 	}
 
 	public Product updateProductStatus(
 			long productId, int status, ServiceContext serviceContext)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProductStatus(productId=" + productId + ", status=" +
+					status + ")");
+		}
 
 		Product product = productPersistence.findByPrimaryKey(productId);
 
@@ -189,12 +262,24 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		_updateAsset(
 			product, categoryIds, _getAssetTagNames(productId), serviceContext);
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProductStatus completed for productId=" + productId +
+					", newStatus=" + product.getStatus());
+		}
+
 		return product;
 	}
 
 	public Product updateProductTags(
 			long productId, long[] tagIds, ServiceContext serviceContext)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProductTags(productId=" + productId + ", tagIds=" +
+					Arrays.toString(tagIds) + ")");
+		}
 
 		Product product = productPersistence.findByPrimaryKey(productId);
 
@@ -205,37 +290,89 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			product, _getAssetCategoryIds(productId),
 			_resolveTagNames(product.getGroupId(), tagIds), serviceContext);
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"updateProductTags completed for productId=" + productId);
+		}
+
 		return product;
 	}
 
 	private void _deleteAssetEntry(long productId) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("_deleteAssetEntry(productId=" + productId + ")");
+		}
+
 		try {
 			assetEntryLocalService.deleteEntry(Product.class.getName(), productId);
 		}
 		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_deleteAssetEntry failed for productId=" + productId,
+					portalException);
+			}
 		}
 	}
 
 	private long[] _getAssetCategoryIds(long productId) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("_getAssetCategoryIds(productId=" + productId + ")");
+		}
+
 		try {
 			AssetEntry assetEntry = assetEntryLocalService.getEntry(
 				Product.class.getName(), productId);
 
-			return assetEntry.getCategoryIds();
+			long[] categoryIds = assetEntry.getCategoryIds();
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_getAssetCategoryIds found " + categoryIds.length +
+						" categories for productId=" + productId);
+			}
+
+			return categoryIds;
 		}
 		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_getAssetCategoryIds returning empty array for productId=" +
+						productId,
+					portalException);
+			}
+
 			return new long[0];
 		}
 	}
 
 	private String[] _getAssetTagNames(long productId) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("_getAssetTagNames(productId=" + productId + ")");
+		}
+
 		try {
 			AssetEntry assetEntry = assetEntryLocalService.getEntry(
 				Product.class.getName(), productId);
 
-			return assetEntry.getTagNames();
+			String[] tagNames = assetEntry.getTagNames();
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_getAssetTagNames found " + tagNames.length +
+						" tags for productId=" + productId);
+			}
+
+			return tagNames;
 		}
 		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_getAssetTagNames returning empty array for productId=" +
+						productId,
+					portalException);
+			}
+
 			return new String[0];
 		}
 	}
@@ -244,6 +381,12 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		ServiceContext serviceContext, long userId, long groupId) {
 
 		if (serviceContext != null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_getServiceContext reusing provided ServiceContext for userId=" +
+						userId + ", groupId=" + groupId);
+			}
+
 			return serviceContext;
 		}
 
@@ -252,19 +395,43 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		newServiceContext.setScopeGroupId(groupId);
 		newServiceContext.setUserId(userId);
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_getServiceContext created new ServiceContext for userId=" +
+					userId + ", groupId=" + groupId);
+		}
+
 		return newServiceContext;
 	}
 
 	private String _normalize(String value) {
 		if (value == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("_normalize received null value");
+			}
+
 			return null;
 		}
 
-		return value.trim();
+		String normalizedValue = value.trim();
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_normalize trimmed value from length=" + value.length() +
+					" to length=" + normalizedValue.length());
+		}
+
+		return normalizedValue;
 	}
 
 	private String[] _resolveTagNames(long groupId, long[] tagIds)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_resolveTagNames(groupId=" + groupId + ", tagIds=" +
+					Arrays.toString(tagIds) + ")");
+		}
 
 		if ((tagIds == null) || (tagIds.length == 0)) {
 			return new String[0];
@@ -287,6 +454,12 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			tagNames[i] = assetTag.getName();
 		}
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_resolveTagNames resolved " + tagNames.length +
+					" tag names for groupId=" + groupId);
+		}
+
 		return tagNames;
 	}
 
@@ -296,6 +469,14 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		throws PortalException {
 
 		boolean visible = product.getStatus() == ProductStatusConstants.PUBLISHED;
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_updateAsset(productId=" + product.getProductId() +
+					", categoryIds=" + Arrays.toString(categoryIds) +
+					", tagNames=" + Arrays.toString(tagNames) + ", visible=" +
+					visible + ")");
+		}
 
 		assetEntryLocalService.updateEntry(
 			product.getUserId(), product.getGroupId(), product.getCreateDate(),
@@ -308,6 +489,12 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 
 	private long[] _validateCategories(long groupId, long[] categoryIds)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_validateCategories(groupId=" + groupId + ", categoryIds=" +
+					Arrays.toString(categoryIds) + ")");
+		}
 
 		if (categoryIds == null) {
 			return new long[0];
@@ -329,13 +516,29 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			}
 		}
 
-		return Arrays.copyOf(categoryIds, categoryIds.length);
+		long[] validatedCategoryIds = Arrays.copyOf(
+			categoryIds, categoryIds.length);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_validateCategories validated " +
+					validatedCategoryIds.length + " categories");
+		}
+
+		return validatedCategoryIds;
 	}
 
 	private void _validate(
 			int status, int stockQuantity, String name, String description,
 			double price, long[] categoryIds)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_validate(status=" + status + ", stockQuantity=" +
+					stockQuantity + ", price=" + price + ", categoryIds=" +
+					Arrays.toString(categoryIds) + ")");
+		}
 
 		if (!ProductStatusConstants.isValid(status)) {
 			throw new ProductStatusException("Invalid product status: " + status);
@@ -349,11 +552,23 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		if (status == ProductStatusConstants.PUBLISHED) {
 			_validatePublishedProduct(name, description, price, categoryIds);
 		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("_validate passed for status=" + status);
+		}
 	}
 
 	private void _validatePublishedProduct(
 			String name, String description, double price, long[] categoryIds)
 		throws PortalException {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_validatePublishedProduct(nameBlank=" + Validator.isBlank(name) +
+					", descriptionBlank=" + Validator.isBlank(description) +
+					", price=" + price + ", categoryCount=" +
+					((categoryIds == null) ? 0 : categoryIds.length) + ")");
+		}
 
 		if (Validator.isBlank(name)) {
 			throw new ProductValidationException(
@@ -374,12 +589,27 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			throw new ProductValidationException(
 				"At least one category is required for publication");
 		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("_validatePublishedProduct passed");
+		}
 	}
 
 	private void _validateTransition(int currentStatus, int newStatus)
 		throws PortalException {
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"_validateTransition(currentStatus=" + currentStatus +
+					", newStatus=" + newStatus + ")");
+		}
+
 		if (currentStatus == newStatus) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"_validateTransition ignored because status is unchanged");
+			}
+
 			return;
 		}
 
@@ -387,11 +617,19 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			((newStatus == ProductStatusConstants.PUBLISHED) ||
 			 (newStatus == ProductStatusConstants.INACTIVE))) {
 
+			if (_log.isDebugEnabled()) {
+				_log.debug("_validateTransition accepted from DRAFT");
+			}
+
 			return;
 		}
 
 		if ((currentStatus == ProductStatusConstants.PUBLISHED) &&
 			(newStatus == ProductStatusConstants.INACTIVE)) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug("_validateTransition accepted from PUBLISHED");
+			}
 
 			return;
 		}
@@ -399,6 +637,10 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		if ((currentStatus == ProductStatusConstants.INACTIVE) &&
 			((newStatus == ProductStatusConstants.DRAFT) ||
 			 (newStatus == ProductStatusConstants.PUBLISHED))) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug("_validateTransition accepted from INACTIVE");
+			}
 
 			return;
 		}
@@ -410,5 +652,8 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 
 	@Reference
 	private AssetCategoryLocalService assetCategoryLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ProductLocalServiceImpl.class);
 
 }
