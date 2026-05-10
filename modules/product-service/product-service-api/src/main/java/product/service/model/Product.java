@@ -48,4 +48,3 @@ public interface Product extends PersistedModel, ProductModel {
 		};
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-415266776

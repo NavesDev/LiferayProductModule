@@ -51,4 +51,3 @@ public class ProductTable extends BaseTable<ProductTable> {
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-401950558

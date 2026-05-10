@@ -355,4 +355,3 @@ public class ProductLocalServiceUtil {
 			ProductLocalServiceUtil.class, ProductLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1508760870

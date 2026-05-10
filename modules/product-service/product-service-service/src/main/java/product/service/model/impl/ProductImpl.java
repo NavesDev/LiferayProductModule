@@ -10,4 +10,3 @@ package product.service.model.impl;
  */
 public class ProductImpl extends ProductBaseImpl {
 }
-// LIFERAY-SERVICE-BUILDER-HASH:981697453

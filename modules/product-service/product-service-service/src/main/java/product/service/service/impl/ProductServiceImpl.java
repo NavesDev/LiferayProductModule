@@ -23,4 +23,3 @@ import product.service.service.base.ProductServiceBaseImpl;
 )
 public class ProductServiceImpl extends ProductServiceBaseImpl {
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1692157445

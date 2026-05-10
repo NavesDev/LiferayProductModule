@@ -44,4 +44,3 @@ public class ProductServiceUtil {
 		new Snapshot<>(ProductServiceUtil.class, ProductService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:326100118

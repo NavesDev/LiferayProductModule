@@ -48,4 +48,3 @@ public class ProductServiceWrapper
 	private ProductService _productService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:855717492

@@ -216,4 +216,3 @@ public class ProductCacheModel implements CacheModel<Product>, Externalizable {
 	public double price;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1231935382

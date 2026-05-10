@@ -47,4 +47,3 @@ public interface ProductService extends BaseService {
 	public String getOSGiServiceIdentifier();
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1347449988

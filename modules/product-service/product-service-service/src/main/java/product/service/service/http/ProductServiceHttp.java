@@ -33,4 +33,3 @@ package product.service.service.http;
  */
 public class ProductServiceHttp {
 }
-// LIFERAY-SERVICE-BUILDER-HASH:429080390

@@ -312,4 +312,3 @@ public interface ProductLocalService
 	public Product updateProduct(Product product);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:16862408

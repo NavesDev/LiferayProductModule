@@ -405,4 +405,3 @@ public class ProductLocalServiceWrapper
 	private ProductLocalService _productLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1905472427

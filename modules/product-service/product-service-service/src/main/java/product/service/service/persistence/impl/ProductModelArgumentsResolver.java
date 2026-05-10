@@ -131,4 +131,3 @@ public class ProductModelArgumentsResolver implements ArgumentsResolver {
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:25038281

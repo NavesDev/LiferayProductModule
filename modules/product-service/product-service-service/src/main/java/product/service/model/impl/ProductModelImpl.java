@@ -936,4 +936,3 @@ public class ProductModelImpl
 	private Product _escapedModel;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-267502054

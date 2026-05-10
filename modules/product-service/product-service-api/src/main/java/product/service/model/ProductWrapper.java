@@ -404,4 +404,3 @@ public class ProductWrapper
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1624113328

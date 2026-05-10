@@ -246,4 +246,3 @@ public interface ProductModel
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:388160664

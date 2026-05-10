@@ -39,4 +39,3 @@ public abstract class ProductBaseImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1679988238
