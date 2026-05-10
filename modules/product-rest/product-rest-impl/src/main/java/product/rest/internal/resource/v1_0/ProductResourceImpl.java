@@ -42,19 +42,27 @@ import product.service.service.ProductLocalService;
 public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Override
-	public Response deleteProduct(Long productId) throws Exception {
+	public Response deleteSiteProduct(Long siteId, Long productId)
+		throws Exception {
+
+		_validateProductSite(siteId, productId);
+
 		_productLocalService.deleteProduct(productId);
 
 		return Response.noContent().build();
 	}
 
 	@Override
-	public Product getProduct(Long productId) throws Exception {
-		return _toDTO(_productLocalService.getProduct(productId));
+	public Product getSiteProduct(Long siteId, Long productId) throws Exception {
+		product.service.model.Product serviceProduct = _validateProductSite(
+			siteId, productId);
+
+		return _toDTO(serviceProduct, siteId);
 	}
 
 	@Override
-	public Page<Product> getProductsPage(
+	public Page<Product> getSiteProductsPage(
+			Long siteId,
 			String search, String status, Long categoryId, Long tagId,
 			Boolean inStock, Pagination pagination,
 			com.liferay.portal.kernel.search.Sort[] sorts)
@@ -65,7 +73,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		List<Product> filtered = products.stream(
 		).map(
-			this::_toDTO
+			product -> _toDTO(product, siteId)
 		).filter(
 			product -> _matchesFilters(product, search, status, categoryId, tagId, inStock)
 		).collect(Collectors.toCollection(ArrayList::new));
@@ -87,64 +95,70 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	}
 
 	@Override
-	public Product postProduct(Product product) throws Exception {
+	public Product postSiteProduct(Long siteId, Product product) throws Exception {
 		_validatePayload(product);
 
 		product.service.model.Product createdProduct = _productLocalService.addProduct(
-			contextUser.getUserId(), _getGroupId(), product.getName(),
+			contextUser.getUserId(), siteId, product.getName(),
 			product.getDescription(), _defaultDouble(product.getPrice()),
 			_toStatus(product.getStatus()), _defaultInteger(product.getStockQuantity()),
 			_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
-			_createServiceContext());
+			_createServiceContext(siteId));
 
-		return _toDTO(createdProduct);
+		return _toDTO(createdProduct, siteId);
 	}
 
 	@Override
-	public Product putProduct(Long productId, Product product) throws Exception {
+	public Product putSiteProduct(Long siteId, Long productId, Product product)
+		throws Exception {
+
 		_validatePayload(product);
+		_validateProductSite(siteId, productId);
 
 		product.service.model.Product updatedProduct = _productLocalService.updateProduct(
 			productId, product.getName(), product.getDescription(),
 			_defaultDouble(product.getPrice()), _toStatus(product.getStatus()),
 			_defaultInteger(product.getStockQuantity()),
 			_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
-			_createServiceContext());
+			_createServiceContext(siteId));
 
-		return _toDTO(updatedProduct);
+		return _toDTO(updatedProduct, siteId);
 	}
 
 	@Override
-	public Product putProductCategories(
-			Long productId, ProductCategories productCategories)
+	public Product putSiteProductCategories(
+			Long siteId, Long productId, ProductCategories productCategories)
 		throws Exception {
 
 		if (productCategories == null) {
 			throw new BadRequestException("Product categories payload is required");
 		}
+		_validateProductSite(siteId, productId);
 
 		product.service.model.Product updatedProduct =
 			_productLocalService.updateProductCategories(
 				productId, _toLongArray(productCategories.getCategoryIds()),
-				_createServiceContext());
+				_createServiceContext(siteId));
 
-		return _toDTO(updatedProduct);
+		return _toDTO(updatedProduct, siteId);
 	}
 
 	@Override
-	public Product putProductTags(Long productId, ProductTags productTags)
+	public Product putSiteProductTags(
+			Long siteId, Long productId, ProductTags productTags)
 		throws Exception {
 
 		if (productTags == null) {
 			throw new BadRequestException("Product tags payload is required");
 		}
+		_validateProductSite(siteId, productId);
 
 		product.service.model.Product updatedProduct =
 			_productLocalService.updateProductTags(
 				productId, _toLongArray(productTags.getTagIds()),
-				_createServiceContext());
+				_createServiceContext(siteId));
 
-		return _toDTO(updatedProduct);
+		return _toDTO(updatedProduct, siteId);
 	}
 
 	private void _applySort(
@@ -182,11 +196,11 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		products.sort(comparator);
 	}
 
-	private ServiceContext _createServiceContext() {
+	private ServiceContext _createServiceContext(long siteId) {
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setCompanyId(contextCompany.getCompanyId());
-		serviceContext.setScopeGroupId(_getGroupId());
+		serviceContext.setScopeGroupId(siteId);
 		serviceContext.setUserId(contextUser.getUserId());
 
 		return serviceContext;
@@ -206,10 +220,6 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		}
 
 		return value;
-	}
-
-	private long _getGroupId() {
-		return contextUser.getGroupId();
 	}
 
 	private String _lower(String value) {
@@ -270,7 +280,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		return Objects.equals(product.getStatus().getValue(), status);
 	}
 
-	private Product _toDTO(product.service.model.Product product) {
+	private Product _toDTO(product.service.model.Product product, long siteId) {
 		Product dtoProduct = new Product();
 
 		dtoProduct.setDescription(product.getDescription());
@@ -291,7 +301,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			else {
 				dtoProduct.setCategoryIds(
 					_toLongObjectArray(assetEntry.getCategoryIds()));
-				dtoProduct.setTagIds(_toTagIds(assetEntry.getTagNames()));
+				dtoProduct.setTagIds(_toTagIds(siteId, assetEntry.getTagNames()));
 			}
 		}
 		catch (PortalException portalException) {
@@ -366,7 +376,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		return array;
 	}
 
-	private Long[] _toTagIds(String[] tagNames) {
+	private Long[] _toTagIds(long siteId, String[] tagNames) {
 		if (ArrayUtil.isEmpty(tagNames)) {
 			return new Long[0];
 		}
@@ -374,7 +384,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		List<Long> tagIds = new ArrayList<>();
 
 		for (String tagName : tagNames) {
-			AssetTag assetTag = _assetTagLocalService.fetchTag(_getGroupId(), tagName);
+			AssetTag assetTag = _assetTagLocalService.fetchTag(siteId, tagName);
 
 			if (assetTag != null) {
 				tagIds.add(assetTag.getTagId());
@@ -388,6 +398,21 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		if (product == null) {
 			throw new BadRequestException("Product payload is required");
 		}
+	}
+
+	private product.service.model.Product _validateProductSite(
+			Long siteId, Long productId)
+		throws Exception {
+
+		product.service.model.Product product = _productLocalService.getProduct(
+			productId);
+
+		if (!Objects.equals(product.getGroupId(), siteId)) {
+			throw new BadRequestException(
+				"Product does not belong to the provided siteId");
+		}
+
+		return product;
 	}
 
 	@Reference

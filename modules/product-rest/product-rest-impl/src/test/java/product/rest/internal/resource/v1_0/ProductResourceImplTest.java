@@ -45,6 +45,7 @@ class ProductResourceImplTest {
 	private static final long COMPANY_ID = 10001L;
 	private static final long GROUP_ID = 30001L;
 	private static final long PRODUCT_ID = 40001L;
+	private static final long SITE_ID = 30001L;
 	private static final long USER_ID = 20001L;
 
 	@Mock
@@ -126,7 +127,7 @@ class ProductResourceImplTest {
 			when(assetTag.getTagId()).thenReturn(22L);
 
 			// Act
-			Product response = productResource.postProduct(payload);
+			Product response = productResource.postSiteProduct(SITE_ID, payload);
 
 			// Assert
 			assertThat(response.getId()).isEqualTo(PRODUCT_ID);
@@ -139,7 +140,7 @@ class ProductResourceImplTest {
 				anyInt(), anyInt(), any(long[].class), any(long[].class),
 				serviceContextArgumentCaptor.capture());
 
-			assertThat(serviceContextArgumentCaptor.getValue().getScopeGroupId()).isEqualTo(GROUP_ID);
+			assertThat(serviceContextArgumentCaptor.getValue().getScopeGroupId()).isEqualTo(SITE_ID);
 			assertThat(serviceContextArgumentCaptor.getValue().getUserId()).isEqualTo(USER_ID);
 		}
 	}
@@ -162,10 +163,20 @@ class ProductResourceImplTest {
 
 			when(productLocalService.getProducts(0, Integer.MAX_VALUE)).thenReturn(
 				List.of(publishedInStock, draftOutStock));
+			when(
+				assetEntryLocalService.getEntry(
+					product.service.model.Product.class.getName(), 1L)
+			).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[0]);
+			when(assetEntry.getTagNames()).thenReturn(new String[0]);
+			when(
+				assetEntryLocalService.getEntry(
+					product.service.model.Product.class.getName(), 2L)
+			).thenReturn(assetEntry);
 
 			// Act
-			Page<Product> page = productResource.getProductsPage(
-				null, "published", null, null, null, null, null);
+			Page<Product> page = productResource.getSiteProductsPage(
+				SITE_ID, null, "published", null, null, null, null, null);
 
 			// Assert
 			assertThat(page.getItems()).hasSize(1);
@@ -192,10 +203,11 @@ class ProductResourceImplTest {
 				productLocalService.updateProductCategories(
 					anyLong(), any(), any(ServiceContext.class))
 			).thenReturn(updated);
+			when(productLocalService.getProduct(PRODUCT_ID)).thenReturn(updated);
 
 			// Act
-			Product response = productResource.putProductCategories(
-				PRODUCT_ID, productCategories);
+			Product response = productResource.putSiteProductCategories(
+				SITE_ID, PRODUCT_ID, productCategories);
 
 			// Assert
 			assertThat(response.getId()).isEqualTo(PRODUCT_ID);
@@ -218,9 +230,11 @@ class ProductResourceImplTest {
 				productLocalService.updateProductTags(
 					anyLong(), any(), any(ServiceContext.class))
 			).thenReturn(updated);
+			when(productLocalService.getProduct(PRODUCT_ID)).thenReturn(updated);
 
 			// Act
-			Product response = productResource.putProductTags(PRODUCT_ID, productTags);
+			Product response = productResource.putSiteProductTags(
+				SITE_ID, PRODUCT_ID, productTags);
 
 			// Assert
 			assertThat(response.getId()).isEqualTo(PRODUCT_ID);
@@ -234,6 +248,7 @@ class ProductResourceImplTest {
 
 		product.setProductId(id);
 		product.setDescription("Descricao");
+		product.setGroupId(SITE_ID);
 		product.setName(name);
 		product.setPrice(10.5D);
 		product.setStatus(0);
