@@ -69,7 +69,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 - produto consegue referenciar categorias e tags nativas de forma consistente
 - estoque nao aceita valor negativo
 
-## Fase 1 - MVP Administrativo de Produtos
+## Fase 1 - MVP Administrativo de Produtos ✅
 
 **Objetivo:** permitir operacao interna do catalogo com regras minimas.
 
