@@ -25,11 +25,11 @@ A entidade `Product` possui os seguintes campos:
 
 ## Estrutura principal
 
-- [modules/product-service](/home/naves/Trabalho/Workspaces/LiferayProductModule/modules/product-service)
-- [modules/product-service/product-service-service/service.xml](/home/naves/Trabalho/Workspaces/LiferayProductModule/modules/product-service/product-service-service/service.xml:1)
-- [.workspace-rules/liferay-rules.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/.workspace-rules/liferay-rules.md:1)
-- [.workspace-rules/initial-setup-guide.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/.workspace-rules/initial-setup-guide.md:1)
-- [SETUP_GUIDE.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/SETUP_GUIDE.md:1)
+- [modules/product-service](modules/product-service)
+- [modules/product-service/product-service-service/service.xml](modules/product-service/product-service-service/service.xml)
+- [.workspace-rules/liferay-rules.md](.workspace-rules/liferay-rules.md)
+- [.workspace-rules/initial-setup-guide.md](.workspace-rules/initial-setup-guide.md)
+- [SETUP_GUIDE.md](SETUP_GUIDE.md)
 
 ## Pré-requisitos
 
@@ -39,7 +39,7 @@ A entidade `Product` possui os seguintes campos:
 
 ## Setup rápido
 
-O passo a passo completo está em [SETUP_GUIDE.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/SETUP_GUIDE.md:1).
+O passo a passo completo está em [SETUP_GUIDE.md](SETUP_GUIDE.md).
 
 Fluxo resumido:
 
@@ -96,6 +96,6 @@ blade gw deploy
 
 ## Referências
 
-- Guia operacional do workspace: [SETUP_GUIDE.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/SETUP_GUIDE.md:1)
-- Guia base para novos usuários: [.workspace-rules/initial-setup-guide.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/.workspace-rules/initial-setup-guide.md:1)
-- Regras gerais de Liferay: [.workspace-rules/liferay-rules.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/.workspace-rules/liferay-rules.md:1)
+- Guia operacional do workspace: [SETUP_GUIDE.md](SETUP_GUIDE.md)
+- Guia base para novos usuários: [.workspace-rules/initial-setup-guide.md](.workspace-rules/initial-setup-guide.md)
+- Regras gerais de Liferay: [.workspace-rules/liferay-rules.md](.workspace-rules/liferay-rules.md)

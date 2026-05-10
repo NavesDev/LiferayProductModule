@@ -2,7 +2,7 @@
 
 Este guia prepara o ambiente local para executar este workspace Liferay com Java `17.0.12-oracle`.
 
-Como referência complementar, veja também [.workspace-rules/initial-setup-guide.md](/home/naves/Trabalho/Workspaces/LiferayProductModule/.workspace-rules/initial-setup-guide.md:1).
+Como referência complementar, veja também [.workspace-rules/initial-setup-guide.md](.workspace-rules/initial-setup-guide.md).
 
 ## Pré-requisitos
 
@@ -34,7 +34,7 @@ Resultado esperado no `java -version`: Java `17.0.12-oracle`.
 ## 2. Entrar no projeto
 
 ```bash
-cd /home/naves/Trabalho/Workspaces/LiferayProductModule
+cd /caminho/do/LiferayProductModule
 ```
 
 ## 3. Validar a estrutura do workspace
@@ -125,7 +125,7 @@ blade gw tasks
 
 ## 8. Fluxo recomendado para este projeto
 
-Quando alterar [service.xml](/home/naves/Trabalho/Workspaces/LiferayProductModule/modules/product-service/product-service-service/service.xml:1):
+Quando alterar [service.xml](modules/product-service/product-service-service/service.xml):
 
 ```bash
 blade gw buildService
