@@ -144,6 +144,30 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 - catalogo pode ser consumido por interface administrativa ou canal externo com filtros reais
 - consulta publica nao expoe produtos inativos ou rascunhos por padrao
 
+## Fase 3.5 - Escopo por Site (Headless Pattern)
+
+**Objetivo:** explicitar o contexto de site na API para evitar ambiguidade de `groupId` e alinhar ao padrao Liferay Headless.
+
+### Entregas
+
+- introduzir endpoints com `siteId/groupId` no path:
+  - `POST /sites/{siteId}/products`
+  - `GET /sites/{siteId}/products/{productId}`
+  - `PUT /sites/{siteId}/products/{productId}`
+  - `DELETE /sites/{siteId}/products/{productId}`
+  - `GET /sites/{siteId}/products`
+  - `PUT /sites/{siteId}/products/{productId}/categories`
+  - `PUT /sites/{siteId}/products/{productId}/tags`
+- garantir validacao de consistencia entre `siteId` informado e `groupId` efetivo do produto
+- manter compatibilidade de contrato para clientes existentes (estrategia de transicao/deprecacao dos endpoints sem `siteId`)
+- atualizar testes de contrato e integracao para cobrir cenarios multi-site
+
+### Criterio de saida
+
+- consumidor da API consegue escolher explicitamente o site alvo no endpoint
+- erros de categoria/tag de outro grupo ficam previsiveis e contextualizados pelo `siteId`
+- contrato REST fica alinhado ao padrao headless de escopo por site
+
 ## Fase 4 - Garantia de Testes
 
 **Objetivo:** validar o desafio com cobertura adequada dos fluxos principais.
@@ -175,6 +199,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 ### Prioridade Media
 
 - Fase 3
+- Fase 3.5
 - Fase 4
 
 ## 6. Sequencia de Entrega Sugerida
@@ -200,6 +225,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 ### Onda 4
 
 - busca filtrada
+- endpoints por `siteId/groupId`
 - consolidacao da suite de testes
 
 ## 7. Riscos e Dependencias
