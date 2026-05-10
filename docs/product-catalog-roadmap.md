@@ -6,7 +6,7 @@
 
 ## 1. Resumo Executivo
 
-O workspace ja possui a fundacao tecnica de um modulo Liferay com Service Builder e a entidade inicial `Product`. Porem, o codigo atual ainda esta em estagio basico: existe apenas o modelo inicial com `name`, `description` e `price`, sem regras de negocio implementadas, sem contratos REST e sem suporte a categorias, tags, estoque, status ou busca filtrada.
+O workspace ja possui a fundacao tecnica de um modulo Liferay com Service Builder e a entidade inicial `Product`. Porem, o codigo atual ainda esta em estagio basico: existe apenas o modelo inicial com `name`, `description` e `price`, sem regras de negocio implementadas, sem contratos REST e sem suporte a associacoes com categorias e tags nativas do Liferay, estoque, status ou busca filtrada.
 
 Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafio em camadas:
 
@@ -29,8 +29,8 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 ### Ainda nao existe
 
 - CRUD funcional de produto com regras de negocio
-- categorias
-- tags
+- integracao com categorias nativas do Liferay
+- integracao com tags nativas do Liferay
 - estoque
 - status de produto
 - API REST versionada
@@ -56,9 +56,8 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 - expandir `service.xml` para incluir:
   - `status`
   - `stockQuantity`
-  - entidade `Category`
-  - entidade `Tag`
-  - relacionamentos N:N entre produto e classificacoes
+- manter `Product` como unica entidade do modulo
+- definir integracao com `AssetCategory` e `AssetTag`
 - regenerar Service Builder
 - implementar servicos locais com validacoes basicas
 - definir enums ou constantes de status
@@ -67,7 +66,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 ### Criterio de saida
 
 - produto pode ser criado e atualizado com modelo novo
-- categorias e tags existem no dominio
+- produto consegue referenciar categorias e tags nativas de forma consistente
 - estoque nao aceita valor negativo
 
 ## Fase 1 - MVP Administrativo de Produtos
@@ -77,10 +76,8 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 ### Entregas
 
 - CRUD de produtos no service layer
-- CRUD de categorias
-- CRUD de tags
-- associacao produto-categoria
-- associacao produto-tag
+- associacao produto-categoria nativa
+- associacao produto-tag nativa
 - regras de transicao de status:
   - `draft -> published`
   - `draft -> inactive`
@@ -112,8 +109,8 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
   - `PUT /products/{productId}`
   - `DELETE /products/{productId}`
   - `GET /products`
-  - CRUD de `categories`
-  - CRUD de `tags`
+  - `PUT /products/{productId}/categories`
+  - `PUT /products/{productId}/tags`
 - DTOs e mapeamentos desacoplados do modelo Service Builder
 - tratamento padrao de erros e validacoes
 - paginacao e ordenacao basicas
@@ -191,7 +188,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 ### Onda 2
 
 - CRUD administrativo completo
-- categorias e tags
+- associacoes com categorias e tags nativas
 - cobertura minima de testes de negocio
 
 ### Onda 3
@@ -216,7 +213,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 ### Dependencias
 
 - definicao funcional exata das regras de publicacao
-- decisao sobre obrigatoriedade minima de categorias
+- decisao sobre obrigatoriedade minima de categorias nativas
 - decisao sobre quais filtros sao obrigatorios no escopo final do desafio
 
 ## 8. Indicadores de Sucesso

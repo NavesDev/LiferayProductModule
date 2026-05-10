@@ -13,8 +13,8 @@ O workspace ja possui um modulo `product-service` criado com Liferay Service Bui
 A necessidade atual e evoluir esse modulo para um servico de catalogo que suporte:
 
 - CRUD de produtos
-- Gestao de categorias
-- Gestao de tags
+- Associacao com categorias nativas do Liferay
+- Associacao com tags nativas do Liferay
 - Controle de estoque
 - Controle de status do produto (`draft`, `publicado`, `inativo`)
 - Busca de produtos com filtros
@@ -43,8 +43,8 @@ Sem isso, o modulo nao atende cenarios basicos como publicar apenas produtos val
 ### Em escopo
 
 - CRUD de produtos
-- CRUD de categorias
-- CRUD de tags
+- associacao e desassociacao de categorias nativas do Liferay
+- associacao e desassociacao de tags nativas do Liferay
 - Atualizacao e consulta de estoque
 - Status de produto com regras de transicao basicas
 - Busca paginada de produtos com filtros
@@ -92,7 +92,7 @@ O servico sera organizado em quatro camadas:
 - `product-service-service`
   entidades, persistence, local services e regras de negocio
 - `product-service-rest`
-  recursos REST para produtos, categorias, tags e busca
+  recursos REST para produtos, associacoes de taxonomia e busca
 
 ### 6.3 Modelo de dominio proposto
 
@@ -113,35 +113,20 @@ Campos recomendados:
 Observacao:
 O campo de estoque pode nascer no proprio produto para manter a primeira entrega simples. Se houver expectativa de movimentacoes, reserva ou multiplos depositos, o caminho recomendado e separar o estoque em entidade propria.
 
-#### Categoria
+#### Taxonomias nativas do Liferay
 
-Representa uma classificacao navegacional do produto.
+As classificacoes de categoria e tag nao devem ser modeladas como entidades proprias neste modulo.
 
-Campos recomendados:
+Uso recomendado:
 
-- `categoryId`
-- `groupId` e auditoria padrao
-- `name`
-- `description`
-- `active`
+- `AssetCategory` para classificacao navegacional
+- `AssetTag` para classificacao livre
+- vinculacao do `Product` a categorias e tags por integracao com os servicos nativos do Liferay
 
-Relacionamento recomendado:
+Diretriz:
 
-- `Product` N:N `Category`
-
-#### Tag
-
-Representa uma classificacao livre para busca e agrupamento.
-
-Campos recomendados:
-
-- `tagId`
-- `groupId` e auditoria padrao
-- `name`
-
-Relacionamento recomendado:
-
-- `Product` N:N `Tag`
+- o modulo continua dono apenas da entidade `Product`
+- categorias e tags sao referenciadas por IDs nativos do portal
 
 ### 6.4 Regras de negocio
 
@@ -152,6 +137,7 @@ Relacionamento recomendado:
 - Estoque nao pode ser negativo.
 - Busca publica deve retornar por padrao apenas produtos `publicado`.
 - A API administrativa pode consultar qualquer status.
+- IDs de categorias e tags informados devem existir no escopo do site antes da associacao.
 
 ### 6.5 Maquina de estados
 
@@ -205,6 +191,30 @@ Request:
 
 `DELETE /products/{productId}`
 
+#### Associar categorias nativas
+
+`PUT /products/{productId}/categories`
+
+Request:
+
+```json
+{
+  "categoryIds": [10, 11]
+}
+```
+
+#### Associar tags nativas
+
+`PUT /products/{productId}/tags`
+
+Request:
+
+```json
+{
+  "tagIds": [100, 101]
+}
+```
+
 #### Listar e buscar produtos
 
 `GET /products`
@@ -226,19 +236,11 @@ Exemplo:
 
 ### 7.2 Categorias
 
-- `POST /categories`
-- `GET /categories/{categoryId}`
-- `PUT /categories/{categoryId}`
-- `DELETE /categories/{categoryId}`
-- `GET /categories`
+O modulo nao cria nem administra categorias. Ele apenas vincula o produto a `AssetCategory` ja existentes no portal.
 
 ### 7.3 Tags
 
-- `POST /tags`
-- `GET /tags/{tagId}`
-- `PUT /tags/{tagId}`
-- `DELETE /tags/{tagId}`
-- `GET /tags`
+O modulo nao cria nem administra tags. Ele apenas vincula o produto a `AssetTag` ja existentes no portal.
 
 ### 7.4 Estoque
 
@@ -287,17 +289,15 @@ Fase 2:
 ### 9.1 Tabelas esperadas
 
 - `PRODUCT_Product`
-- `PRODUCT_Category`
-- `PRODUCT_Tag`
-- tabela de associacao `PRODUCT_Products_Categories`
-- tabela de associacao `PRODUCT_Products_Tags`
+- estruturas nativas do Liferay para `AssetCategory` e `AssetTag`
+- mecanismo de associacao do produto com taxonomias nativas, sem criar entidades `Category` e `Tag` no modulo
 
 ### 9.2 Decisoes de modelagem
 
 - `status` deve ser persistido como `int` ou `String` conforme convencao do modulo, mas o contrato REST deve expor valores semanticos estaveis.
 - `stockQuantity` deve ser numerico inteiro.
-- categorias e tags devem ser entidades explicitas; nao apenas campos texto no produto.
-- relacionamentos N:N evitam retrabalho caso um produto precise estar em multiplas categorias.
+- categorias e tags nao devem ser duplicadas no dominio; o modulo deve reutilizar `AssetCategory` e `AssetTag`.
+- o produto pode estar associado a multiplas categorias e multiplas tags nativas.
 
 ## 10. Validacoes
 
@@ -307,6 +307,7 @@ Fase 2:
 - `status` deve pertencer ao enum suportado
 - `stockQuantity` maior ou igual a zero
 - IDs de categorias e tags devem existir antes do vinculo
+- categorias e tags devem pertencer ao `groupId` esperado para evitar associacoes cruzadas
 
 ## 11. Seguranca
 
@@ -318,7 +319,7 @@ Fase 2:
 ## 12. Estrategia de Testes
 
 - testes unitarios para regras de status e validacoes
-- testes de integracao para persistence e relacionamentos
+- testes de integracao para persistence e associacoes com taxonomias nativas
 - testes de contrato REST para CRUD e busca
 - cenarios obrigatorios:
   - publicar produto valido
@@ -345,21 +346,21 @@ Fase 2:
 ### Fase 1 - Dominio
 
 - expandir `service.xml` com campos de status e estoque
-- criar entidades `Category` e `Tag`
-- criar relacionamentos entre produto, categoria e tag
+- manter `Product` como unica entidade do modulo
+- definir integracao do produto com `AssetCategory` e `AssetTag`
 - gerar codigo via Service Builder
 
 ### Fase 2 - Regras de negocio
 
 - implementar validacoes de produto
 - implementar transicoes de status
-- implementar servicos de associacao de categorias e tags
+- implementar servicos de associacao de categorias e tags nativas
 - implementar regras de filtro e consulta
 
 ### Fase 3 - REST API
 
 - criar modulo REST
-- expor endpoints de produtos, categorias e tags
+- expor endpoints de produtos e endpoints de associacao com categorias e tags nativas
 - expor endpoint de busca com paginacao e filtros
 - mapear erros de negocio para respostas HTTP coerentes
 
@@ -372,8 +373,8 @@ Fase 2:
 ## 16. Critérios de Aceite
 
 - e possivel criar, consultar, atualizar e remover produtos
-- e possivel criar, consultar, atualizar e remover categorias
-- e possivel criar, consultar, atualizar e remover tags
+- e possivel associar e desassociar categorias nativas do Liferay a produtos
+- e possivel associar e desassociar tags nativas do Liferay a produtos
 - e possivel alterar e consultar estoque
 - e possivel alterar status entre `draft`, `publicado` e `inativo`
 - a busca retorna resultados paginados e filtrados
@@ -381,7 +382,7 @@ Fase 2:
 
 ## 17. Questoes em Aberto
 
-- `Category` deve ser hierarquica ou plana na primeira versao?
+- a primeira versao deve apenas consumir categorias e tags ja existentes ou tambem listar taxonomias nativas para apoio ao cliente da API?
 - `price` continuara como `double` ou deve migrar para representacao monetaria mais segura?
 - a primeira versao precisa de endpoint publico e endpoint administrativo separados?
 - o estoque sera apenas saldo atual ou precisaremos de historico de movimentacao?
