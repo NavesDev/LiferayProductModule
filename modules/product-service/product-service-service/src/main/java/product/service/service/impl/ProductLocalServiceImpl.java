@@ -27,8 +27,12 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import product.service.exception.ProductCategoryException;
+import product.service.exception.ProductAssetUpdateException;
+import product.service.exception.ProductPersistenceException;
+import product.service.exception.ProductResourceException;
 import product.service.exception.ProductStatusException;
 import product.service.exception.ProductTagException;
+import product.service.exception.ProductUserException;
 import product.service.exception.ProductValidationException;
 import product.service.model.Product;
 import product.service.model.ProductStatusConstants;
@@ -64,7 +68,16 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 
 		serviceContext = _getServiceContext(serviceContext, userId, groupId);
 
-		User user = userLocalService.getUser(userId);
+		User user;
+
+		try {
+			user = userLocalService.getUser(userId);
+		}
+		catch (PortalException portalException) {
+			throw new ProductUserException(
+				"Unable to load user with userId " + userId,
+				portalException);
+		}
 
 		long productId = counterLocalService.increment(Product.class.getName());
 
@@ -85,13 +98,35 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		product.setUserId(userId);
 		product.setUserName(user.getFullName());
 
-		product = productPersistence.update(product);
+		try {
+			product = productPersistence.update(product);
+		}
+		catch (RuntimeException runtimeException) {
+			throw new ProductPersistenceException(
+				"Unable to persist product for userId " + userId +
+					" and groupId " + groupId,
+				runtimeException);
+		}
 
-		resourceLocalService.addResources(
-			product.getCompanyId(), groupId, userId, Product.class.getName(),
-			productId, false, true, true);
+		try {
+			resourceLocalService.addResources(
+				product.getCompanyId(), groupId, userId, Product.class.getName(),
+				productId, false, true, true);
+		}
+		catch (PortalException portalException) {
+			throw new ProductResourceException(
+				"Unable to add resources for productId " + productId,
+				portalException);
+		}
 
-		_updateAsset(product, validatedCategoryIds, tagNames, serviceContext);
+		try {
+			_updateAsset(product, validatedCategoryIds, tagNames, serviceContext);
+		}
+		catch (PortalException portalException) {
+			throw new ProductAssetUpdateException(
+				"Unable to update asset for productId " + productId,
+				portalException);
+		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
