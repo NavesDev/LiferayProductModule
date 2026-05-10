@@ -95,7 +95,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 - equipe interna consegue cadastrar e manter produtos com classificacao e status
 - publicacao bloqueia produtos invalidos
 
-## Fase 2 - API REST v1.0
+## Fase 2 - API REST v1.0 ✅
 
 **Objetivo:** expor o catalogo para integracoes internas e externas.
 
@@ -120,7 +120,7 @@ Com base nisso, o roadmap recomendado e evolutivo, com foco em entregar o desafi
 - consumidores externos conseguem criar, consultar e listar produtos via API
 - contrato REST fica estavel para integracao inicial
 
-## Fase 3 - Busca e Consulta de Catalogo
+## Fase 3 - Busca e Consulta de Catalogo ✅
 
 **Objetivo:** tornar o catalogo pesquisavel e utilizavel por canais de consulta.
 
