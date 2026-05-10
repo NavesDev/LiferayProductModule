@@ -1,8 +1,272 @@
+openapi: 3.0.1
 info:
-    description: "ProductRest REST API"
+    title: "Product Catalog"
+    version: v1.0
+    description: "Product Catalog REST API"
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-    title: "ProductRest"
-    version: v1.0
-openapi: 3.0.1
+paths:
+    "/products":
+        get:
+            operationId: getProductsPage
+            parameters:
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: status
+                  schema:
+                      type: string
+                      enum:
+                          - draft
+                          - published
+                          - inactive
+                - in: query
+                  name: categoryId
+                  schema:
+                      type: integer
+                      format: int64
+                - in: query
+                  name: tagId
+                  schema:
+                      type: integer
+                      format: int64
+                - in: query
+                  name: inStock
+                  schema:
+                      type: boolean
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                      minimum: 1
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                      minimum: 1
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    description: "List of products"
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Product"
+            tags: ["Product"]
+        post:
+            operationId: postProduct
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+            responses:
+                200:
+                    description: "Created product"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+            tags: ["Product"]
+
+    "/products/{productId}":
+        get:
+            operationId: getProduct
+            parameters:
+                - in: path
+                  name: productId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
+            responses:
+                200:
+                    description: "Requested product"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+            tags: ["Product"]
+        put:
+            operationId: putProduct
+            parameters:
+                - in: path
+                  name: productId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+            responses:
+                200:
+                    description: "Updated product"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+            tags: ["Product"]
+        delete:
+            operationId: deleteProduct
+            parameters:
+                - in: path
+                  name: productId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
+            responses:
+                204:
+                    description: "Product deleted"
+            tags: ["Product"]
+
+    "/products/{productId}/categories":
+        put:
+            operationId: putProductCategories
+            parameters:
+                - in: path
+                  name: productId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProductCategories"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ProductCategories"
+            responses:
+                200:
+                    description: "Updated product categories"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+            tags: ["Product"]
+
+    "/products/{productId}/tags":
+        put:
+            operationId: putProductTags
+            parameters:
+                - in: path
+                  name: productId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProductTags"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ProductTags"
+            responses:
+                200:
+                    description: "Updated product tags"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+            tags: ["Product"]
+
+components:
+    schemas:
+        Product:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                    readOnly: true
+                name:
+                    type: string
+                description:
+                    type: string
+                price:
+                    type: number
+                    format: double
+                status:
+                    type: string
+                    enum:
+                        - draft
+                        - published
+                        - inactive
+                stockQuantity:
+                    type: integer
+                    format: int32
+                categoryIds:
+                    type: array
+                    items:
+                        type: integer
+                        format: int64
+                tagIds:
+                    type: array
+                    items:
+                        type: integer
+                        format: int64
+        ProductCategories:
+            type: object
+            required:
+                - categoryIds
+            properties:
+                categoryIds:
+                    type: array
+                    items:
+                        type: integer
+                        format: int64
+        ProductTags:
+            type: object
+            required:
+                - tagIds
+            properties:
+                tagIds:
+                    type: array
+                    items:
+                        type: integer
+                        format: int64
