@@ -137,6 +137,10 @@ public class ProductPersistenceTest {
 
 		newProduct.setPrice(RandomTestUtil.nextDouble());
 
+		newProduct.setStatus(RandomTestUtil.nextInt());
+
+		newProduct.setStockQuantity(RandomTestUtil.nextInt());
+
 		_products.add(_persistence.update(newProduct));
 
 		Product existingProduct = _persistence.findByPrimaryKey(
@@ -164,6 +168,10 @@ public class ProductPersistenceTest {
 			existingProduct.getDescription(), newProduct.getDescription());
 		AssertUtils.assertEquals(
 			existingProduct.getPrice(), newProduct.getPrice());
+		Assert.assertEquals(
+			existingProduct.getStatus(), newProduct.getStatus());
+		Assert.assertEquals(
+			existingProduct.getStockQuantity(), newProduct.getStockQuantity());
 	}
 
 	@Test
@@ -228,7 +236,7 @@ public class ProductPersistenceTest {
 			"PRODUCT_Product", "uuid", true, "productId", true, "groupId", true,
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "name", true, "description", true,
-			"price", true);
+			"price", true, "status", true, "stockQuantity", true);
 	}
 
 	@Test
@@ -519,6 +527,10 @@ public class ProductPersistenceTest {
 		product.setDescription(RandomTestUtil.randomString());
 
 		product.setPrice(RandomTestUtil.nextDouble());
+
+		product.setStatus(RandomTestUtil.nextInt());
+
+		product.setStockQuantity(RandomTestUtil.nextInt());
 
 		_products.add(_persistence.update(product));
 

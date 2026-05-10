@@ -13,5 +13,7 @@
 		<field name="name" type="String" />
 		<field name="description" type="String" />
 		<field name="price" type="double" />
+		<field name="status" type="int" />
+		<field name="stockQuantity" type="int" />
 	</model>
 </model-hints>

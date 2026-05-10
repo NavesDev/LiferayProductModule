@@ -9,5 +9,7 @@ create table PRODUCT_Product (
 	modifiedDate DATE null,
 	name VARCHAR(75) null,
 	description VARCHAR(75) null,
-	price DOUBLE
+	price DOUBLE,
+	status INTEGER,
+	stockQuantity INTEGER
 );

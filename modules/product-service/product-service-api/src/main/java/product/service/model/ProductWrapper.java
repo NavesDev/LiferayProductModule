@@ -45,6 +45,8 @@ public class ProductWrapper
 		attributes.put("name", getName());
 		attributes.put("description", getDescription());
 		attributes.put("price", getPrice());
+		attributes.put("status", getStatus());
+		attributes.put("stockQuantity", getStockQuantity());
 
 		return attributes;
 	}
@@ -115,6 +117,18 @@ public class ProductWrapper
 
 		if (price != null) {
 			setPrice(price);
+		}
+
+		Integer status = (Integer)attributes.get("status");
+
+		if (status != null) {
+			setStatus(status);
+		}
+
+		Integer stockQuantity = (Integer)attributes.get("stockQuantity");
+
+		if (stockQuantity != null) {
+			setStockQuantity(stockQuantity);
 		}
 	}
 
@@ -211,6 +225,26 @@ public class ProductWrapper
 	@Override
 	public long getProductId() {
 		return model.getProductId();
+	}
+
+	/**
+	 * Returns the status of this product.
+	 *
+	 * @return the status of this product
+	 */
+	@Override
+	public int getStatus() {
+		return model.getStatus();
+	}
+
+	/**
+	 * Returns the stock quantity of this product.
+	 *
+	 * @return the stock quantity of this product
+	 */
+	@Override
+	public int getStockQuantity() {
+		return model.getStockQuantity();
 	}
 
 	/**
@@ -346,6 +380,26 @@ public class ProductWrapper
 	@Override
 	public void setProductId(long productId) {
 		model.setProductId(productId);
+	}
+
+	/**
+	 * Sets the status of this product.
+	 *
+	 * @param status the status of this product
+	 */
+	@Override
+	public void setStatus(int status) {
+		model.setStatus(status);
+	}
+
+	/**
+	 * Sets the stock quantity of this product.
+	 *
+	 * @param stockQuantity the stock quantity of this product
+	 */
+	@Override
+	public void setStockQuantity(int stockQuantity) {
+		model.setStockQuantity(stockQuantity);
 	}
 
 	/**

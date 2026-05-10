@@ -45,6 +45,10 @@ public class ProductTable extends BaseTable<ProductTable> {
 		"description", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ProductTable, Double> price = createColumn(
 		"price", Double.class, Types.DOUBLE, Column.FLAG_DEFAULT);
+	public final Column<ProductTable, Integer> status = createColumn(
+		"status", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<ProductTable, Integer> stockQuantity = createColumn(
+		"stockQuantity", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 
 	private ProductTable() {
 		super("PRODUCT_Product", ProductTable::new);

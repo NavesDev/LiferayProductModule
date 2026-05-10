@@ -238,6 +238,34 @@ public interface ProductModel
 	 */
 	public void setPrice(double price);
 
+	/**
+	 * Returns the status of this product.
+	 *
+	 * @return the status of this product
+	 */
+	public int getStatus();
+
+	/**
+	 * Sets the status of this product.
+	 *
+	 * @param status the status of this product
+	 */
+	public void setStatus(int status);
+
+	/**
+	 * Returns the stock quantity of this product.
+	 *
+	 * @return the stock quantity of this product
+	 */
+	public int getStockQuantity();
+
+	/**
+	 * Sets the stock quantity of this product.
+	 *
+	 * @param stockQuantity the stock quantity of this product
+	 */
+	public void setStockQuantity(int stockQuantity);
+
 	@Override
 	public Product cloneWithOriginalValues();
 

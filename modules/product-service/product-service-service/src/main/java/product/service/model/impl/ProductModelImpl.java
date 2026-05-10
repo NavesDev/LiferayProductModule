@@ -70,7 +70,8 @@ public class ProductModelImpl
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"price", Types.DOUBLE}
+		{"price", Types.DOUBLE}, {"status", Types.INTEGER},
+		{"stockQuantity", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -88,10 +89,12 @@ public class ProductModelImpl
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("price", Types.DOUBLE);
+		TABLE_COLUMNS_MAP.put("status", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("stockQuantity", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table PRODUCT_Product (uuid_ VARCHAR(75) null,productId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name VARCHAR(75) null,description VARCHAR(75) null,price DOUBLE)";
+		"create table PRODUCT_Product (uuid_ VARCHAR(75) null,productId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name VARCHAR(75) null,description VARCHAR(75) null,price DOUBLE,status INTEGER,stockQuantity INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table PRODUCT_Product";
 
@@ -251,6 +254,9 @@ public class ProductModelImpl
 			attributeGetterFunctions.put(
 				"description", Product::getDescription);
 			attributeGetterFunctions.put("price", Product::getPrice);
+			attributeGetterFunctions.put("status", Product::getStatus);
+			attributeGetterFunctions.put(
+				"stockQuantity", Product::getStockQuantity);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -292,6 +298,11 @@ public class ProductModelImpl
 				(BiConsumer<Product, String>)Product::setDescription);
 			attributeSetterBiConsumers.put(
 				"price", (BiConsumer<Product, Double>)Product::setPrice);
+			attributeSetterBiConsumers.put(
+				"status", (BiConsumer<Product, Integer>)Product::setStatus);
+			attributeSetterBiConsumers.put(
+				"stockQuantity",
+				(BiConsumer<Product, Integer>)Product::setStockQuantity);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -534,6 +545,36 @@ public class ProductModelImpl
 		_price = price;
 	}
 
+	@JSON
+	@Override
+	public int getStatus() {
+		return _status;
+	}
+
+	@Override
+	public void setStatus(int status) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_status = status;
+	}
+
+	@JSON
+	@Override
+	public int getStockQuantity() {
+		return _stockQuantity;
+	}
+
+	@Override
+	public void setStockQuantity(int stockQuantity) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_stockQuantity = stockQuantity;
+	}
+
 	@Override
 	public StagedModelType getStagedModelType() {
 		return new StagedModelType(
@@ -607,6 +648,8 @@ public class ProductModelImpl
 		productImpl.setName(getName());
 		productImpl.setDescription(getDescription());
 		productImpl.setPrice(getPrice());
+		productImpl.setStatus(getStatus());
+		productImpl.setStockQuantity(getStockQuantity());
 
 		productImpl.resetOriginalValues();
 
@@ -634,6 +677,9 @@ public class ProductModelImpl
 		productImpl.setDescription(
 			this.<String>getColumnOriginalValue("description"));
 		productImpl.setPrice(this.<Double>getColumnOriginalValue("price"));
+		productImpl.setStatus(this.<Integer>getColumnOriginalValue("status"));
+		productImpl.setStockQuantity(
+			this.<Integer>getColumnOriginalValue("stockQuantity"));
 
 		return productImpl;
 	}
@@ -769,6 +815,10 @@ public class ProductModelImpl
 
 		productCacheModel.price = getPrice();
 
+		productCacheModel.status = getStatus();
+
+		productCacheModel.stockQuantity = getStockQuantity();
+
 		return productCacheModel;
 	}
 
@@ -842,6 +892,8 @@ public class ProductModelImpl
 	private String _name;
 	private String _description;
 	private double _price;
+	private int _status;
+	private int _stockQuantity;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -884,6 +936,8 @@ public class ProductModelImpl
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("description", _description);
 		_columnOriginalValues.put("price", _price);
+		_columnOriginalValues.put("status", _status);
+		_columnOriginalValues.put("stockQuantity", _stockQuantity);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -928,6 +982,10 @@ public class ProductModelImpl
 		columnBitmasks.put("description", 512L);
 
 		columnBitmasks.put("price", 1024L);
+
+		columnBitmasks.put("status", 2048L);
+
+		columnBitmasks.put("stockQuantity", 4096L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

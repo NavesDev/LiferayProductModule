@@ -52,7 +52,7 @@ public class ProductCacheModel implements CacheModel<Product>, Externalizable {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(23);
+		StringBundler sb = new StringBundler(27);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -76,6 +76,10 @@ public class ProductCacheModel implements CacheModel<Product>, Externalizable {
 		sb.append(description);
 		sb.append(", price=");
 		sb.append(price);
+		sb.append(", status=");
+		sb.append(status);
+		sb.append(", stockQuantity=");
+		sb.append(stockQuantity);
 		sb.append("}");
 
 		return sb.toString();
@@ -133,6 +137,8 @@ public class ProductCacheModel implements CacheModel<Product>, Externalizable {
 		}
 
 		productImpl.setPrice(price);
+		productImpl.setStatus(status);
+		productImpl.setStockQuantity(stockQuantity);
 
 		productImpl.resetOriginalValues();
 
@@ -157,6 +163,10 @@ public class ProductCacheModel implements CacheModel<Product>, Externalizable {
 		description = objectInput.readUTF();
 
 		price = objectInput.readDouble();
+
+		status = objectInput.readInt();
+
+		stockQuantity = objectInput.readInt();
 	}
 
 	@Override
@@ -201,6 +211,10 @@ public class ProductCacheModel implements CacheModel<Product>, Externalizable {
 		}
 
 		objectOutput.writeDouble(price);
+
+		objectOutput.writeInt(status);
+
+		objectOutput.writeInt(stockQuantity);
 	}
 
 	public String uuid;
@@ -214,5 +228,7 @@ public class ProductCacheModel implements CacheModel<Product>, Externalizable {
 	public String name;
 	public String description;
 	public double price;
+	public int status;
+	public int stockQuantity;
 
 }
