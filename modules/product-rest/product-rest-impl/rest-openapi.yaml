@@ -7,10 +7,16 @@ info:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 paths:
-    "/products":
+    "/sites/{siteId}/products":
         get:
-            operationId: getProductsPage
+            operationId: getSiteProductsPage
             parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
                 - in: query
                   name: search
                   schema:
@@ -67,7 +73,14 @@ paths:
                                     $ref: "#/components/schemas/Product"
             tags: ["Product"]
         post:
-            operationId: postProduct
+            operationId: postSiteProduct
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
             requestBody:
                 required: true
                 content:
@@ -89,10 +102,16 @@ paths:
                                 $ref: "#/components/schemas/Product"
             tags: ["Product"]
 
-    "/products/{productId}":
+    "/sites/{siteId}/products/{productId}":
         get:
-            operationId: getProduct
+            operationId: getSiteProduct
             parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
                 - in: path
                   name: productId
                   required: true
@@ -111,8 +130,14 @@ paths:
                                 $ref: "#/components/schemas/Product"
             tags: ["Product"]
         put:
-            operationId: putProduct
+            operationId: putSiteProduct
             parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
                 - in: path
                   name: productId
                   required: true
@@ -140,8 +165,14 @@ paths:
                                 $ref: "#/components/schemas/Product"
             tags: ["Product"]
         delete:
-            operationId: deleteProduct
+            operationId: deleteSiteProduct
             parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
                 - in: path
                   name: productId
                   required: true
@@ -153,10 +184,16 @@ paths:
                     description: "Product deleted"
             tags: ["Product"]
 
-    "/products/{productId}/categories":
+    "/sites/{siteId}/products/{productId}/categories":
         put:
-            operationId: putProductCategories
+            operationId: putSiteProductCategories
             parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
                 - in: path
                   name: productId
                   required: true
@@ -184,10 +221,16 @@ paths:
                                 $ref: "#/components/schemas/Product"
             tags: ["Product"]
 
-    "/products/{productId}/tags":
+    "/sites/{siteId}/products/{productId}/tags":
         put:
-            operationId: putProductTags
+            operationId: putSiteProductTags
             parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      type: integer
+                      format: int64
                 - in: path
                   name: productId
                   required: true
