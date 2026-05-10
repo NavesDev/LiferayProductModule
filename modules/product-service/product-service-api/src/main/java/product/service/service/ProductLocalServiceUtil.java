@@ -37,6 +37,17 @@ public class ProductLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>product.service.service.impl.ProductLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static Product addProduct(
+			long userId, long groupId, String name, String description,
+			double price, int status, int stockQuantity, long[] categoryIds,
+			long[] tagIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addProduct(
+			userId, groupId, name, description, price, status, stockQuantity,
+			categoryIds, tagIds, serviceContext);
+	}
 
 	/**
 	 * Adds the product to the database. Also notifies the appropriate model listeners.
@@ -332,6 +343,17 @@ public class ProductLocalServiceUtil {
 		return getService().getProductsCount();
 	}
 
+	public static Product updateProduct(
+			long productId, String name, String description, double price,
+			int status, int stockQuantity, long[] categoryIds, long[] tagIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateProduct(
+			productId, name, description, price, status, stockQuantity,
+			categoryIds, tagIds, serviceContext);
+	}
+
 	/**
 	 * Updates the product in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -344,6 +366,33 @@ public class ProductLocalServiceUtil {
 	 */
 	public static Product updateProduct(Product product) {
 		return getService().updateProduct(product);
+	}
+
+	public static Product updateProductCategories(
+			long productId, long[] categoryIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateProductCategories(
+			productId, categoryIds, serviceContext);
+	}
+
+	public static Product updateProductStatus(
+			long productId, int status,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateProductStatus(
+			productId, status, serviceContext);
+	}
+
+	public static Product updateProductTags(
+			long productId, long[] tagIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateProductTags(
+			productId, tagIds, serviceContext);
 	}
 
 	public static ProductLocalService getService() {

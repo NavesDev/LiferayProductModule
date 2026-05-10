@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -55,6 +56,11 @@ public interface ProductLocalService
 	 *
 	 * Never modify this interface directly. Add custom service methods to <code>product.service.service.impl.ProductLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the product local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ProductLocalServiceUtil} if injection and service tracking are not available.
 	 */
+	public Product addProduct(
+			long userId, long groupId, String name, String description,
+			double price, int status, int stockQuantity, long[] categoryIds,
+			long[] tagIds, ServiceContext serviceContext)
+		throws PortalException;
 
 	/**
 	 * Adds the product to the database. Also notifies the appropriate model listeners.
@@ -298,6 +304,12 @@ public interface ProductLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getProductsCount();
 
+	public Product updateProduct(
+			long productId, String name, String description, double price,
+			int status, int stockQuantity, long[] categoryIds, long[] tagIds,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 	/**
 	 * Updates the product in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -310,5 +322,17 @@ public interface ProductLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public Product updateProduct(Product product);
+
+	public Product updateProductCategories(
+			long productId, long[] categoryIds, ServiceContext serviceContext)
+		throws PortalException;
+
+	public Product updateProductStatus(
+			long productId, int status, ServiceContext serviceContext)
+		throws PortalException;
+
+	public Product updateProductTags(
+			long productId, long[] tagIds, ServiceContext serviceContext)
+		throws PortalException;
 
 }

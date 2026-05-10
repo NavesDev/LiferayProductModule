@@ -26,6 +26,19 @@ public class ProductLocalServiceWrapper
 		_productLocalService = productLocalService;
 	}
 
+	@Override
+	public product.service.model.Product addProduct(
+			long userId, long groupId, String name, String description,
+			double price, int status, int stockQuantity, long[] categoryIds,
+			long[] tagIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _productLocalService.addProduct(
+			userId, groupId, name, description, price, status, stockQuantity,
+			categoryIds, tagIds, serviceContext);
+	}
+
 	/**
 	 * Adds the product to the database. Also notifies the appropriate model listeners.
 	 *
@@ -370,6 +383,18 @@ public class ProductLocalServiceWrapper
 		return _productLocalService.getProductsCount();
 	}
 
+	@Override
+	public product.service.model.Product updateProduct(
+			long productId, String name, String description, double price,
+			int status, int stockQuantity, long[] categoryIds, long[] tagIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _productLocalService.updateProduct(
+			productId, name, description, price, status, stockQuantity,
+			categoryIds, tagIds, serviceContext);
+	}
+
 	/**
 	 * Updates the product in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -385,6 +410,36 @@ public class ProductLocalServiceWrapper
 		product.service.model.Product product) {
 
 		return _productLocalService.updateProduct(product);
+	}
+
+	@Override
+	public product.service.model.Product updateProductCategories(
+			long productId, long[] categoryIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _productLocalService.updateProductCategories(
+			productId, categoryIds, serviceContext);
+	}
+
+	@Override
+	public product.service.model.Product updateProductStatus(
+			long productId, int status,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _productLocalService.updateProductStatus(
+			productId, status, serviceContext);
+	}
+
+	@Override
+	public product.service.model.Product updateProductTags(
+			long productId, long[] tagIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _productLocalService.updateProductTags(
+			productId, tagIds, serviceContext);
 	}
 
 	@Override
