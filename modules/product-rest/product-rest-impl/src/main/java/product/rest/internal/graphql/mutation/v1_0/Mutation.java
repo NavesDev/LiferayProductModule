@@ -16,6 +16,8 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.validation.constraints.NotEmpty;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -42,17 +44,34 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response deleteProduct(@GraphQLName("productId") Long productId)
+	public Response deleteSiteProduct(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("productId") Long productId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_productResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			productResource -> productResource.deleteProduct(productId));
+			productResource -> productResource.deleteSiteProduct(
+				Long.valueOf(siteKey), productId));
 	}
 
 	@GraphQLField
-	public Response deleteProductBatch(
+	public Product createSiteProduct(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("product") Product product)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productResource -> productResource.postSiteProduct(
+				Long.valueOf(siteKey), product));
+	}
+
+	@GraphQLField
+	public Response createSiteProductBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -60,35 +79,13 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_productResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			productResource -> productResource.deleteProductBatch(
-				callbackURL, object));
+			productResource -> productResource.postSiteProductBatch(
+				Long.valueOf(siteKey), callbackURL, object));
 	}
 
 	@GraphQLField
-	public Product createProduct(@GraphQLName("product") Product product)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_productResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			productResource -> productResource.postProduct(product));
-	}
-
-	@GraphQLField
-	public Response createProductBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_productResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			productResource -> productResource.postProductBatch(
-				callbackURL, object));
-	}
-
-	@GraphQLField
-	public Product updateProduct(
+	public Product updateSiteProduct(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("productId") Long productId,
 			@GraphQLName("product") Product product)
 		throws Exception {
@@ -96,24 +93,13 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_productResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			productResource -> productResource.putProduct(productId, product));
+			productResource -> productResource.putSiteProduct(
+				Long.valueOf(siteKey), productId, product));
 	}
 
 	@GraphQLField
-	public Response updateProductBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_productResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			productResource -> productResource.putProductBatch(
-				callbackURL, object));
-	}
-
-	@GraphQLField
-	public Product updateProductCategories(
+	public Product updateSiteProductCategories(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("productId") Long productId,
 			@GraphQLName("productCategories") ProductCategories
 				productCategories)
@@ -122,12 +108,13 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_productResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			productResource -> productResource.putProductCategories(
-				productId, productCategories));
+			productResource -> productResource.putSiteProductCategories(
+				Long.valueOf(siteKey), productId, productCategories));
 	}
 
 	@GraphQLField
-	public Product updateProductTags(
+	public Product updateSiteProductTags(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("productId") Long productId,
 			@GraphQLName("productTags") ProductTags productTags)
 		throws Exception {
@@ -135,8 +122,8 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_productResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			productResource -> productResource.putProductTags(
-				productId, productTags));
+			productResource -> productResource.putSiteProductTags(
+				Long.valueOf(siteKey), productId, productTags));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R

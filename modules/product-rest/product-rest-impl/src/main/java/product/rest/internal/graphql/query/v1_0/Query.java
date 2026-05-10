@@ -20,6 +20,8 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.validation.constraints.NotEmpty;
+
 import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
@@ -45,25 +47,29 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {product(productId: ___){id, name, description, price, status, stockQuantity, categoryIds, tagIds}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {product(productId: ___, siteKey: ___){id, name, description, price, status, stockQuantity, categoryIds, tagIds}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public Product product(@GraphQLName("productId") Long productId)
+	public Product product(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("productId") Long productId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_productResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			productResource -> productResource.getProduct(productId));
+			productResource -> productResource.getSiteProduct(
+				Long.valueOf(siteKey), productId));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {products(categoryId: ___, inStock: ___, page: ___, pageSize: ___, search: ___, sorts: ___, status: ___, tagId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {products(categoryId: ___, inStock: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___, status: ___, tagId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ProductPage products(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("search") String search,
 			@GraphQLName("status") String status,
 			@GraphQLName("categoryId") Long categoryId,
@@ -78,9 +84,9 @@ public class Query {
 			_productResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			productResource -> new ProductPage(
-				productResource.getProductsPage(
-					search, status, categoryId, tagId, inStock,
-					Pagination.of(page, pageSize),
+				productResource.getSiteProductsPage(
+					Long.valueOf(siteKey), search, status, categoryId, tagId,
+					inStock, Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(productResource, sortsString))));
 	}
 

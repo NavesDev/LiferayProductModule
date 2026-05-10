@@ -72,10 +72,14 @@ public abstract class BaseProductResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/product-rest/v1.0/products/{productId}'  -u 'test@liferay.com:test'
+	 * curl -X 'DELETE' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products/{productId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "productId"
@@ -86,9 +90,13 @@ public abstract class BaseProductResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/products/{productId}")
+	@javax.ws.rs.Path("/sites/{siteId}/products/{productId}")
 	@Override
-	public Response deleteProduct(
+	public Response deleteSiteProduct(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("productId")
@@ -103,54 +111,14 @@ public abstract class BaseProductResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/product-rest/v1.0/products/batch'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products/{productId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/products/batch")
-	@javax.ws.rs.Produces("application/json")
-	@Override
-	public Response deleteProductBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.deleteImportTask(
-				Product.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/product-rest/v1.0/products/{productId}'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "productId"
@@ -161,10 +129,14 @@ public abstract class BaseProductResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/products/{productId}")
+	@javax.ws.rs.Path("/sites/{siteId}/products/{productId}")
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Product getProduct(
+	public Product getSiteProduct(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("productId")
@@ -177,10 +149,14 @@ public abstract class BaseProductResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/product-rest/v1.0/products'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
@@ -219,10 +195,14 @@ public abstract class BaseProductResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/products")
+	@javax.ws.rs.Path("/sites/{siteId}/products")
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Page<Product> getProductsPage(
+	public Page<Product> getSiteProductsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
@@ -249,27 +229,46 @@ public abstract class BaseProductResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/product-rest/v1.0/products' -d $'{"categoryIds": ___, "description": ___, "name": ___, "price": ___, "status": ___, "stockQuantity": ___, "tagIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products' -d $'{"categoryIds": ___, "description": ___, "name": ___, "price": ___, "status": ___, "stockQuantity": ___, "tagIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			)
+		}
+	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/products")
+	@javax.ws.rs.Path("/sites/{siteId}/products")
 	@javax.ws.rs.POST
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Product postProduct(Product product) throws Exception {
+	public Product postSiteProduct(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
+			Product product)
+		throws Exception {
+
 		return new Product();
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/product-rest/v1.0/products/batch'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products/batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
@@ -280,11 +279,15 @@ public abstract class BaseProductResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/products/batch")
+	@javax.ws.rs.Path("/sites/{siteId}/products/batch")
 	@javax.ws.rs.POST
 	@javax.ws.rs.Produces("application/json")
 	@Override
-	public Response postProductBatch(
+	public Response postSiteProductBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -310,10 +313,14 @@ public abstract class BaseProductResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/product-rest/v1.0/products/{productId}' -d $'{"categoryIds": ___, "description": ___, "name": ___, "price": ___, "status": ___, "stockQuantity": ___, "tagIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products/{productId}' -d $'{"categoryIds": ___, "description": ___, "name": ___, "price": ___, "status": ___, "stockQuantity": ___, "tagIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "productId"
@@ -324,11 +331,15 @@ public abstract class BaseProductResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/products/{productId}")
+	@javax.ws.rs.Path("/sites/{siteId}/products/{productId}")
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@javax.ws.rs.PUT
 	@Override
-	public Product putProduct(
+	public Product putSiteProduct(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("productId")
@@ -342,54 +353,14 @@ public abstract class BaseProductResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/product-rest/v1.0/products/batch'  -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products/{productId}/categories' -d $'{"categoryIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
-	)
-	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/products/batch")
-	@javax.ws.rs.Produces("application/json")
-	@javax.ws.rs.PUT
-	@Override
-	public Response putProductBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.putImportTask(
-				Product.class.getName(), callbackURL, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/product-rest/v1.0/products/{productId}/categories' -d $'{"categoryIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "productId"
@@ -400,11 +371,15 @@ public abstract class BaseProductResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/products/{productId}/categories")
+	@javax.ws.rs.Path("/sites/{siteId}/products/{productId}/categories")
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@javax.ws.rs.PUT
 	@Override
-	public Product putProductCategories(
+	public Product putSiteProductCategories(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("productId")
@@ -418,10 +393,14 @@ public abstract class BaseProductResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/product-rest/v1.0/products/{productId}/tags' -d $'{"tagIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products/{productId}/tags' -d $'{"tagIds": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "siteId"
+			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "productId"
@@ -432,11 +411,15 @@ public abstract class BaseProductResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
 	@javax.ws.rs.Consumes({"application/json", "application/xml"})
-	@javax.ws.rs.Path("/products/{productId}/tags")
+	@javax.ws.rs.Path("/sites/{siteId}/products/{productId}/tags")
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@javax.ws.rs.PUT
 	@Override
-	public Product putProductTags(
+	public Product putSiteProductTags(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("siteId")
+			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("productId")
@@ -460,7 +443,14 @@ public abstract class BaseProductResourceImpl
 			"createStrategy", "INSERT");
 
 		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
-			productUnsafeFunction = product -> postProduct(product);
+			if (parameters.containsKey("siteId")) {
+				productUnsafeFunction = product -> postSiteProduct(
+					(Long)parameters.get("siteId"), product);
+			}
+			else {
+				throw new NotSupportedException(
+					"One of the following parameters must be specified: [siteId]");
+			}
 		}
 
 		if (productUnsafeFunction == null) {
@@ -489,26 +479,8 @@ public abstract class BaseProductResourceImpl
 			Collection<Product> products, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeFunction<Product, Product, Exception> productUnsafeFunction =
-			product -> {
-				deleteProduct(product.getId());
-
-				return product;
-			};
-
-		if (contextBatchUnsafeBiConsumer != null) {
-			contextBatchUnsafeBiConsumer.accept(
-				products, productUnsafeFunction);
-		}
-		else if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(
-				products, productUnsafeFunction::apply);
-		}
-		else {
-			for (Product product : products) {
-				productUnsafeFunction.apply(product);
-			}
-		}
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	public Set<String> getAvailableCreateStrategies() {
@@ -516,7 +488,7 @@ public abstract class BaseProductResourceImpl
 	}
 
 	public Set<String> getAvailableUpdateStrategies() {
-		return SetUtil.fromArray("UPDATE");
+		return SetUtil.fromArray();
 	}
 
 	@Override
@@ -543,12 +515,19 @@ public abstract class BaseProductResourceImpl
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
-		return getProductsPage(
-			search, (String)parameters.get("status"),
-			_parseLong((String)parameters.get("categoryId")),
-			_parseLong((String)parameters.get("tagId")),
-			_parseBoolean((String)parameters.get("inStock")), pagination,
-			sorts);
+		if (parameters.containsKey("siteId")) {
+			return getSiteProductsPage(
+				(Long)parameters.get("siteId"), search,
+				(String)parameters.get("status"),
+				_parseLong((String)parameters.get("categoryId")),
+				_parseLong((String)parameters.get("tagId")),
+				_parseBoolean((String)parameters.get("inStock")), pagination,
+				sorts);
+		}
+		else {
+			throw new NotSupportedException(
+				"One of the following parameters must be specified: [siteId]");
+		}
 	}
 
 	@Override
@@ -578,36 +557,8 @@ public abstract class BaseProductResourceImpl
 			Collection<Product> products, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeFunction<Product, Product, Exception> productUnsafeFunction =
-			null;
-
-		String updateStrategy = (String)parameters.getOrDefault(
-			"updateStrategy", "UPDATE");
-
-		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
-			productUnsafeFunction = product -> putProduct(
-				product.getId(), product);
-		}
-
-		if (productUnsafeFunction == null) {
-			throw new NotSupportedException(
-				"Update strategy \"" + updateStrategy +
-					"\" is not supported for Product");
-		}
-
-		if (contextBatchUnsafeBiConsumer != null) {
-			contextBatchUnsafeBiConsumer.accept(
-				products, productUnsafeFunction);
-		}
-		else if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(
-				products, productUnsafeFunction::apply);
-		}
-		else {
-			for (Product product : products) {
-				productUnsafeFunction.apply(product);
-			}
-		}
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	private Boolean _parseBoolean(String value) {

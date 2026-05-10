@@ -185,42 +185,57 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteProduct() throws Exception {
+	public void testDeleteSiteProduct() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Product product = testDeleteProduct_addProduct();
+		Product product = testDeleteSiteProduct_addProduct();
 
 		assertHttpResponseStatusCode(
-			204, productResource.deleteProductHttpResponse(product.getId()));
+			204,
+			productResource.deleteSiteProductHttpResponse(
+				testDeleteSiteProduct_getSiteId(), product.getId()));
 
 		assertHttpResponseStatusCode(
-			404, productResource.getProductHttpResponse(product.getId()));
+			404,
+			productResource.getSiteProductHttpResponse(
+				testDeleteSiteProduct_getSiteId(), product.getId()));
 		assertHttpResponseStatusCode(
-			404, productResource.getProductHttpResponse(0L));
+			404,
+			productResource.getSiteProductHttpResponse(
+				testDeleteSiteProduct_getSiteId(), 0L));
 	}
 
-	protected Product testDeleteProduct_addProduct() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	protected Product testDeleteSiteProduct_addProduct() throws Exception {
+		return productResource.postSiteProduct(
+			testGroup.getGroupId(), randomProduct());
+	}
+
+	protected Long testDeleteSiteProduct_getSiteId() throws Exception {
+		return testGroup.getGroupId();
 	}
 
 	@Test
-	public void testGraphQLDeleteProduct() throws Exception {
+	public void testGraphQLDeleteSiteProduct() throws Exception {
 
 		// No namespace
 
-		Product product1 = testGraphQLDeleteProduct_addProduct();
+		Product product1 = testGraphQLDeleteSiteProduct_addProduct();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
 				invokeGraphQLMutation(
 					new GraphQLField(
-						"deleteProduct",
+						"deleteSiteProduct",
 						new HashMap<String, Object>() {
 							{
+								put(
+									"siteKey",
+									"\"" +
+										testGraphQLDeleteSiteProduct_getSiteId() +
+											"\"");
 								put("productId", product1.getId());
 							}
 						})),
-				"JSONObject/data", "Object/deleteProduct"));
+				"JSONObject/data", "Object/deleteSiteProduct"));
 
 		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
@@ -228,6 +243,11 @@ public abstract class BaseProductResourceTestCase {
 					"product",
 					new HashMap<String, Object>() {
 						{
+							put(
+								"siteKey",
+								"\"" +
+									testGraphQLDeleteSiteProduct_getSiteId() +
+										"\"");
 							put("productId", product1.getId());
 						}
 					},
@@ -237,28 +257,39 @@ public abstract class BaseProductResourceTestCase {
 		Assert.assertTrue(errorsJSONArray1.length() > 0);
 	}
 
-	protected Product testGraphQLDeleteProduct_addProduct() throws Exception {
-		return testGraphQLProduct_addProduct();
+	protected Long testGraphQLDeleteSiteProduct_getSiteId() throws Exception {
+		return testGroup.getGroupId();
+	}
+
+	protected Product testGraphQLDeleteSiteProduct_addProduct()
+		throws Exception {
+
+		return testGraphQLSiteProduct_addProduct();
 	}
 
 	@Test
-	public void testGetProduct() throws Exception {
-		Product postProduct = testGetProduct_addProduct();
+	public void testGetSiteProduct() throws Exception {
+		Product postProduct = testGetSiteProduct_addProduct();
 
-		Product getProduct = productResource.getProduct(postProduct.getId());
+		Product getProduct = productResource.getSiteProduct(
+			testGetSiteProduct_getSiteId(), postProduct.getId());
 
 		assertEquals(postProduct, getProduct);
 		assertValid(getProduct);
 	}
 
-	protected Product testGetProduct_addProduct() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	protected Product testGetSiteProduct_addProduct() throws Exception {
+		return productResource.postSiteProduct(
+			testGroup.getGroupId(), randomProduct());
+	}
+
+	protected Long testGetSiteProduct_getSiteId() throws Exception {
+		return testGroup.getGroupId();
 	}
 
 	@Test
-	public void testGraphQLGetProduct() throws Exception {
-		Product product = testGraphQLGetProduct_addProduct();
+	public void testGraphQLGetSiteProduct() throws Exception {
+		Product product = testGraphQLGetSiteProduct_addProduct();
 
 		// No namespace
 
@@ -272,6 +303,11 @@ public abstract class BaseProductResourceTestCase {
 								"product",
 								new HashMap<String, Object>() {
 									{
+										put(
+											"siteKey",
+											"\"" +
+												testGraphQLGetSiteProduct_getSiteId() +
+													"\"");
 										put("productId", product.getId());
 									}
 								},
@@ -279,8 +315,12 @@ public abstract class BaseProductResourceTestCase {
 						"JSONObject/data", "Object/product"))));
 	}
 
+	protected Long testGraphQLGetSiteProduct_getSiteId() throws Exception {
+		return testGroup.getGroupId();
+	}
+
 	@Test
-	public void testGraphQLGetProductNotFound() throws Exception {
+	public void testGraphQLGetSiteProductNotFound() throws Exception {
 		Long irrelevantProductId = RandomTestUtil.randomLong();
 
 		// No namespace
@@ -293,6 +333,9 @@ public abstract class BaseProductResourceTestCase {
 						"product",
 						new HashMap<String, Object>() {
 							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
 								put("productId", irrelevantProductId);
 							}
 						},
@@ -301,65 +344,96 @@ public abstract class BaseProductResourceTestCase {
 				"Object/code"));
 	}
 
-	protected Product testGraphQLGetProduct_addProduct() throws Exception {
-		return testGraphQLProduct_addProduct();
+	protected Product testGraphQLGetSiteProduct_addProduct() throws Exception {
+		return testGraphQLSiteProduct_addProduct();
 	}
 
 	@Test
-	public void testGetProductsPage() throws Exception {
-		Page<Product> page = productResource.getProductsPage(
-			null, RandomTestUtil.randomString(), null, null, null,
+	public void testGetSiteProductsPage() throws Exception {
+		Long siteId = testGetSiteProductsPage_getSiteId();
+		Long irrelevantSiteId = testGetSiteProductsPage_getIrrelevantSiteId();
+
+		Page<Product> page = productResource.getSiteProductsPage(
+			siteId, null, RandomTestUtil.randomString(), null, null, null,
 			Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
-		Product product1 = testGetProductsPage_addProduct(randomProduct());
+		if (irrelevantSiteId != null) {
+			Product irrelevantProduct = testGetSiteProductsPage_addProduct(
+				irrelevantSiteId, randomIrrelevantProduct());
 
-		Product product2 = testGetProductsPage_addProduct(randomProduct());
+			page = productResource.getSiteProductsPage(
+				irrelevantSiteId, null, null, null, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-		page = productResource.getProductsPage(
-			null, null, null, null, null, Pagination.of(1, 10), null);
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantProduct, (List<Product>)page.getItems());
+			assertValid(
+				page,
+				testGetSiteProductsPage_getExpectedActions(irrelevantSiteId));
+		}
+
+		Product product1 = testGetSiteProductsPage_addProduct(
+			siteId, randomProduct());
+
+		Product product2 = testGetSiteProductsPage_addProduct(
+			siteId, randomProduct());
+
+		page = productResource.getSiteProductsPage(
+			siteId, null, null, null, null, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
 		assertContains(product1, (List<Product>)page.getItems());
 		assertContains(product2, (List<Product>)page.getItems());
-		assertValid(page, testGetProductsPage_getExpectedActions());
-
-		productResource.deleteProduct(product1.getId());
-
-		productResource.deleteProduct(product2.getId());
+		assertValid(page, testGetSiteProductsPage_getExpectedActions(siteId));
 	}
 
 	protected Map<String, Map<String, String>>
-			testGetProductsPage_getExpectedActions()
+			testGetSiteProductsPage_getExpectedActions(Long siteId)
 		throws Exception {
 
 		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/product-rest/v1.0/sites/{siteId}/products/batch".
+				replace("{siteId}", String.valueOf(siteId)));
+
+		expectedActions.put("createBatch", createBatchAction);
 
 		return expectedActions;
 	}
 
 	@Test
-	public void testGetProductsPageWithPagination() throws Exception {
-		Page<Product> productsPage = productResource.getProductsPage(
-			null, null, null, null, null, null, null);
+	public void testGetSiteProductsPageWithPagination() throws Exception {
+		Long siteId = testGetSiteProductsPage_getSiteId();
+
+		Page<Product> productsPage = productResource.getSiteProductsPage(
+			siteId, null, null, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(productsPage.getTotalCount());
 
-		Product product1 = testGetProductsPage_addProduct(randomProduct());
+		Product product1 = testGetSiteProductsPage_addProduct(
+			siteId, randomProduct());
 
-		Product product2 = testGetProductsPage_addProduct(randomProduct());
+		Product product2 = testGetSiteProductsPage_addProduct(
+			siteId, randomProduct());
 
-		Product product3 = testGetProductsPage_addProduct(randomProduct());
+		Product product3 = testGetSiteProductsPage_addProduct(
+			siteId, randomProduct());
 
 		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
 		int pageSizeLimit = 500;
 
 		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<Product> page1 = productResource.getProductsPage(
-				null, null, null, null, null,
+			Page<Product> page1 = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
 					pageSizeLimit),
@@ -369,8 +443,8 @@ public abstract class BaseProductResourceTestCase {
 
 			assertContains(product1, (List<Product>)page1.getItems());
 
-			Page<Product> page2 = productResource.getProductsPage(
-				null, null, null, null, null,
+			Page<Product> page2 = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
 					pageSizeLimit),
@@ -378,8 +452,8 @@ public abstract class BaseProductResourceTestCase {
 
 			assertContains(product2, (List<Product>)page2.getItems());
 
-			Page<Product> page3 = productResource.getProductsPage(
-				null, null, null, null, null,
+			Page<Product> page3 = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
 					pageSizeLimit),
@@ -388,18 +462,18 @@ public abstract class BaseProductResourceTestCase {
 			assertContains(product3, (List<Product>)page3.getItems());
 		}
 		else {
-			Page<Product> page1 = productResource.getProductsPage(
-				null, null, null, null, null, Pagination.of(1, totalCount + 2),
-				null);
+			Page<Product> page1 = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
+				Pagination.of(1, totalCount + 2), null);
 
 			List<Product> products1 = (List<Product>)page1.getItems();
 
 			Assert.assertEquals(
 				products1.toString(), totalCount + 2, products1.size());
 
-			Page<Product> page2 = productResource.getProductsPage(
-				null, null, null, null, null, Pagination.of(2, totalCount + 2),
-				null);
+			Page<Product> page2 = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
+				Pagination.of(2, totalCount + 2), null);
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
@@ -407,8 +481,8 @@ public abstract class BaseProductResourceTestCase {
 
 			Assert.assertEquals(products2.toString(), 1, products2.size());
 
-			Page<Product> page3 = productResource.getProductsPage(
-				null, null, null, null, null,
+			Page<Product> page3 = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
 				Pagination.of(1, (int)totalCount + 3), null);
 
 			assertContains(product1, (List<Product>)page3.getItems());
@@ -418,8 +492,8 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testGetProductsPageWithSortDateTime() throws Exception {
-		testGetProductsPageWithSort(
+	public void testGetSiteProductsPageWithSortDateTime() throws Exception {
+		testGetSiteProductsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, product1, product2) -> {
 				BeanTestUtil.setProperty(
@@ -429,8 +503,8 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testGetProductsPageWithSortDouble() throws Exception {
-		testGetProductsPageWithSort(
+	public void testGetSiteProductsPageWithSortDouble() throws Exception {
+		testGetSiteProductsPageWithSort(
 			EntityField.Type.DOUBLE,
 			(entityField, product1, product2) -> {
 				BeanTestUtil.setProperty(product1, entityField.getName(), 0.1);
@@ -439,8 +513,8 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testGetProductsPageWithSortInteger() throws Exception {
-		testGetProductsPageWithSort(
+	public void testGetSiteProductsPageWithSortInteger() throws Exception {
+		testGetSiteProductsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, product1, product2) -> {
 				BeanTestUtil.setProperty(product1, entityField.getName(), 0);
@@ -449,8 +523,8 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testGetProductsPageWithSortString() throws Exception {
-		testGetProductsPageWithSort(
+	public void testGetSiteProductsPageWithSortString() throws Exception {
+		testGetSiteProductsPageWithSort(
 			EntityField.Type.STRING,
 			(entityField, product1, product2) -> {
 				Class<?> clazz = product1.getClass();
@@ -499,7 +573,7 @@ public abstract class BaseProductResourceTestCase {
 			});
 	}
 
-	protected void testGetProductsPageWithSort(
+	protected void testGetSiteProductsPageWithSort(
 			EntityField.Type type,
 			UnsafeTriConsumer<EntityField, Product, Product, Exception>
 				unsafeTriConsumer)
@@ -511,6 +585,8 @@ public abstract class BaseProductResourceTestCase {
 			return;
 		}
 
+		Long siteId = testGetSiteProductsPage_getSiteId();
+
 		Product product1 = randomProduct();
 		Product product2 = randomProduct();
 
@@ -518,24 +594,24 @@ public abstract class BaseProductResourceTestCase {
 			unsafeTriConsumer.accept(entityField, product1, product2);
 		}
 
-		product1 = testGetProductsPage_addProduct(product1);
+		product1 = testGetSiteProductsPage_addProduct(siteId, product1);
 
-		product2 = testGetProductsPage_addProduct(product2);
+		product2 = testGetSiteProductsPage_addProduct(siteId, product2);
 
-		Page<Product> page = productResource.getProductsPage(
-			null, null, null, null, null, null, null);
+		Page<Product> page = productResource.getSiteProductsPage(
+			siteId, null, null, null, null, null, null, null);
 
 		for (EntityField entityField : entityFields) {
-			Page<Product> ascPage = productResource.getProductsPage(
-				null, null, null, null, null,
+			Page<Product> ascPage = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
 				Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
 			assertContains(product1, (List<Product>)ascPage.getItems());
 			assertContains(product2, (List<Product>)ascPage.getItems());
 
-			Page<Product> descPage = productResource.getProductsPage(
-				null, null, null, null, null,
+			Page<Product> descPage = productResource.getSiteProductsPage(
+				siteId, null, null, null, null, null,
 				Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
@@ -544,19 +620,32 @@ public abstract class BaseProductResourceTestCase {
 		}
 	}
 
-	protected Product testGetProductsPage_addProduct(Product product)
+	protected Product testGetSiteProductsPage_addProduct(
+			Long siteId, Product product)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return productResource.postSiteProduct(siteId, product);
+	}
+
+	protected Long testGetSiteProductsPage_getSiteId() throws Exception {
+		return testGroup.getGroupId();
+	}
+
+	protected Long testGetSiteProductsPage_getIrrelevantSiteId()
+		throws Exception {
+
+		return irrelevantGroup.getGroupId();
 	}
 
 	@Test
-	public void testGraphQLGetProductsPage() throws Exception {
+	public void testGraphQLGetSiteProductsPage() throws Exception {
+		Long siteId = testGetSiteProductsPage_getSiteId();
+
 		GraphQLField graphQLField = new GraphQLField(
 			"products",
 			new HashMap<String, Object>() {
 				{
+					put("siteKey", "\"" + siteId + "\"");
 					put("search", null);
 					put(
 						"status",
@@ -576,9 +665,11 @@ public abstract class BaseProductResourceTestCase {
 
 		long totalCount = productsJSONObject.getLong("totalCount");
 
-		Product product1 = testGraphQLProduct_addProduct(randomProduct());
+		Product product1 = testGraphQLSiteProduct_addProduct(
+			siteId, randomProduct());
 
-		Product product2 = testGraphQLProduct_addProduct(randomProduct());
+		Product product2 = testGraphQLSiteProduct_addProduct(
+			siteId, randomProduct());
 
 		productsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -598,86 +689,100 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testPostProduct() throws Exception {
+	public void testPostSiteProduct() throws Exception {
 		Product randomProduct = randomProduct();
 
-		Product postProduct = testPostProduct_addProduct(randomProduct);
+		Product postProduct = testPostSiteProduct_addProduct(randomProduct);
 
 		assertEquals(randomProduct, postProduct);
 		assertValid(postProduct);
 	}
 
-	protected Product testPostProduct_addProduct(Product product)
+	protected Product testPostSiteProduct_addProduct(Product product)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return productResource.postSiteProduct(
+			testGetSiteProductsPage_getSiteId(), product);
 	}
 
 	@Test
-	public void testGraphQLPostProduct() throws Exception {
+	public void testGraphQLPostSiteProduct() throws Exception {
 		Product randomProduct = randomProduct();
 
-		Product product = testGraphQLProduct_addProduct(randomProduct);
+		Product product = testGraphQLSiteProduct_addProduct(
+			testGroup.getGroupId(), randomProduct);
 
 		Assert.assertTrue(equals(randomProduct, product));
 	}
 
 	@Test
-	public void testPutProduct() throws Exception {
-		Product postProduct = testPutProduct_addProduct();
+	public void testPutSiteProduct() throws Exception {
+		Product postProduct = testPutSiteProduct_addProduct();
 
 		Product randomProduct = randomProduct();
 
-		Product putProduct = productResource.putProduct(
-			postProduct.getId(), randomProduct);
+		Product putProduct = productResource.putSiteProduct(
+			testPutSiteProduct_getSiteId(), postProduct.getId(), randomProduct);
 
 		assertEquals(randomProduct, putProduct);
 		assertValid(putProduct);
 
-		Product getProduct = productResource.getProduct(putProduct.getId());
+		Product getProduct = productResource.getSiteProduct(
+			testPutSiteProduct_getSiteId(), putProduct.getId());
 
 		assertEquals(randomProduct, getProduct);
 		assertValid(getProduct);
 	}
 
-	protected Product testPutProduct_addProduct() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	protected Product testPutSiteProduct_addProduct() throws Exception {
+		return productResource.postSiteProduct(
+			testGroup.getGroupId(), randomProduct());
+	}
+
+	protected Long testPutSiteProduct_getSiteId() throws Exception {
+		return testGroup.getGroupId();
 	}
 
 	@Test
-	public void testPutProductCategories() throws Exception {
-		Product postProduct = testPutProductCategories_addProduct();
+	public void testPutSiteProductCategories() throws Exception {
+		Product postProduct = testPutSiteProductCategories_addProduct();
 
 		Product randomProduct = randomProduct();
 
-		Product putProduct = productResource.putProductCategories(
-			postProduct.getId(),
-			testPutProductCategories_getProductCategories());
+		Product putProduct = productResource.putSiteProductCategories(
+			testPutSiteProductCategories_getSiteId(), postProduct.getId(),
+			testPutSiteProductCategories_getProductCategories());
 
 		assertEquals(randomProduct, putProduct);
 		assertValid(putProduct);
 
-		Product getProduct = testPutProductCategories_getProduct(
-			putProduct.getId());
+		Product getProduct = testPutSiteProductCategories_getProduct(
+			testPutSiteProductCategories_getSiteId(), putProduct.getId());
 
 		assertEquals(randomProduct, getProduct);
 		assertValid(getProduct);
 	}
 
-	protected Product testPutProductCategories_getProduct(Long productId) {
+	protected Product testPutSiteProductCategories_getProduct(
+		Long siteId, Long productId) {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Product testPutProductCategories_addProduct() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	protected Product testPutSiteProductCategories_addProduct()
+		throws Exception {
+
+		return productResource.postSiteProduct(
+			testGroup.getGroupId(), randomProduct());
+	}
+
+	protected Long testPutSiteProductCategories_getSiteId() throws Exception {
+		return testGroup.getGroupId();
 	}
 
 	protected product.rest.dto.v1_0.ProductCategories
-			testPutProductCategories_getProductCategories()
+			testPutSiteProductCategories_getProductCategories()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -685,46 +790,56 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	@Test
-	public void testPutProductTags() throws Exception {
-		Product postProduct = testPutProductTags_addProduct();
+	public void testPutSiteProductTags() throws Exception {
+		Product postProduct = testPutSiteProductTags_addProduct();
 
 		Product randomProduct = randomProduct();
 
-		Product putProduct = productResource.putProductTags(
-			postProduct.getId(), testPutProductTags_getProductTags());
+		Product putProduct = productResource.putSiteProductTags(
+			testPutSiteProductTags_getSiteId(), postProduct.getId(),
+			testPutSiteProductTags_getProductTags());
 
 		assertEquals(randomProduct, putProduct);
 		assertValid(putProduct);
 
-		Product getProduct = testPutProductTags_getProduct(putProduct.getId());
+		Product getProduct = testPutSiteProductTags_getProduct(
+			testPutSiteProductTags_getSiteId(), putProduct.getId());
 
 		assertEquals(randomProduct, getProduct);
 		assertValid(getProduct);
 	}
 
-	protected Product testPutProductTags_getProduct(Long productId) {
+	protected Product testPutSiteProductTags_getProduct(
+		Long siteId, Long productId) {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Product testPutProductTags_addProduct() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	protected Product testPutSiteProductTags_addProduct() throws Exception {
+		return productResource.postSiteProduct(
+			testGroup.getGroupId(), randomProduct());
+	}
+
+	protected Long testPutSiteProductTags_getSiteId() throws Exception {
+		return testGroup.getGroupId();
 	}
 
 	protected product.rest.dto.v1_0.ProductTags
-			testPutProductTags_getProductTags()
+			testPutSiteProductTags_getProductTags()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Product testGraphQLProduct_addProduct() throws Exception {
-		return testGraphQLProduct_addProduct(randomProduct());
+	protected Product testGraphQLSiteProduct_addProduct() throws Exception {
+		return testGraphQLSiteProduct_addProduct(
+			testGroup.getGroupId(), randomProduct());
 	}
 
-	protected Product testGraphQLProduct_addProduct(Product product)
+	protected Product testGraphQLSiteProduct_addProduct(
+			Long siteId, Product product)
 		throws Exception {
 
 		JSONDeserializer<Product> jsonDeserializer =
@@ -752,14 +867,15 @@ public abstract class BaseProductResourceTestCase {
 			JSONUtil.getValueAsString(
 				invokeGraphQLMutation(
 					new GraphQLField(
-						"createProduct",
+						"createSiteProduct",
 						new HashMap<String, Object>() {
 							{
+								put("siteKey", "\"" + siteId + "\"");
 								put("product", sb.toString());
 							}
 						},
 						graphQLFields)),
-				"JSONObject/data", "JSONObject/createProduct"),
+				"JSONObject/data", "JSONObject/createSiteProduct"),
 			Product.class);
 	}
 

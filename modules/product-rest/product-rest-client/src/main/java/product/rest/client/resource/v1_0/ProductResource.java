@@ -31,71 +31,66 @@ public interface ProductResource {
 		return new Builder();
 	}
 
-	public void deleteProduct(Long productId) throws Exception;
+	public void deleteSiteProduct(Long siteId, Long productId) throws Exception;
 
-	public HttpInvoker.HttpResponse deleteProductHttpResponse(Long productId)
+	public HttpInvoker.HttpResponse deleteSiteProductHttpResponse(
+			Long siteId, Long productId)
 		throws Exception;
 
-	public void deleteProductBatch(String callbackURL, Object object)
+	public Product getSiteProduct(Long siteId, Long productId) throws Exception;
+
+	public HttpInvoker.HttpResponse getSiteProductHttpResponse(
+			Long siteId, Long productId)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse deleteProductBatchHttpResponse(
-			String callbackURL, Object object)
+	public Page<Product> getSiteProductsPage(
+			Long siteId, String search, String status, Long categoryId,
+			Long tagId, Boolean inStock, Pagination pagination,
+			String sortString)
 		throws Exception;
 
-	public Product getProduct(Long productId) throws Exception;
-
-	public HttpInvoker.HttpResponse getProductHttpResponse(Long productId)
+	public HttpInvoker.HttpResponse getSiteProductsPageHttpResponse(
+			Long siteId, String search, String status, Long categoryId,
+			Long tagId, Boolean inStock, Pagination pagination,
+			String sortString)
 		throws Exception;
 
-	public Page<Product> getProductsPage(
-			String search, String status, Long categoryId, Long tagId,
-			Boolean inStock, Pagination pagination, String sortString)
+	public Product postSiteProduct(Long siteId, Product product)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse getProductsPageHttpResponse(
-			String search, String status, Long categoryId, Long tagId,
-			Boolean inStock, Pagination pagination, String sortString)
+	public HttpInvoker.HttpResponse postSiteProductHttpResponse(
+			Long siteId, Product product)
 		throws Exception;
 
-	public Product postProduct(Product product) throws Exception;
-
-	public HttpInvoker.HttpResponse postProductHttpResponse(Product product)
+	public void postSiteProductBatch(
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public void postProductBatch(String callbackURL, Object object)
+	public HttpInvoker.HttpResponse postSiteProductBatchHttpResponse(
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse postProductBatchHttpResponse(
-			String callbackURL, Object object)
+	public Product putSiteProduct(Long siteId, Long productId, Product product)
 		throws Exception;
 
-	public Product putProduct(Long productId, Product product) throws Exception;
-
-	public HttpInvoker.HttpResponse putProductHttpResponse(
-			Long productId, Product product)
+	public HttpInvoker.HttpResponse putSiteProductHttpResponse(
+			Long siteId, Long productId, Product product)
 		throws Exception;
 
-	public void putProductBatch(String callbackURL, Object object)
+	public Product putSiteProductCategories(
+			Long siteId, Long productId, ProductCategories productCategories)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse putProductBatchHttpResponse(
-			String callbackURL, Object object)
+	public HttpInvoker.HttpResponse putSiteProductCategoriesHttpResponse(
+			Long siteId, Long productId, ProductCategories productCategories)
 		throws Exception;
 
-	public Product putProductCategories(
-			Long productId, ProductCategories productCategories)
+	public Product putSiteProductTags(
+			Long siteId, Long productId, ProductTags productTags)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse putProductCategoriesHttpResponse(
-			Long productId, ProductCategories productCategories)
-		throws Exception;
-
-	public Product putProductTags(Long productId, ProductTags productTags)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse putProductTagsHttpResponse(
-			Long productId, ProductTags productTags)
+	public HttpInvoker.HttpResponse putSiteProductTagsHttpResponse(
+			Long siteId, Long productId, ProductTags productTags)
 		throws Exception;
 
 	public static class Builder {
@@ -206,9 +201,11 @@ public interface ProductResource {
 
 	public static class ProductResourceImpl implements ProductResource {
 
-		public void deleteProduct(Long productId) throws Exception {
-			HttpInvoker.HttpResponse httpResponse = deleteProductHttpResponse(
-				productId);
+		public void deleteSiteProduct(Long siteId, Long productId)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				deleteSiteProductHttpResponse(siteId, productId);
 
 			String content = httpResponse.getContent();
 
@@ -258,8 +255,8 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse deleteProductHttpResponse(
-				Long productId)
+		public HttpInvoker.HttpResponse deleteSiteProductHttpResponse(
+				Long siteId, Long productId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -286,8 +283,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/{productId}");
+						"/o/product-rest/v1.0/sites/{siteId}/products/{productId}");
 
+			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("productId", productId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {
@@ -298,108 +296,11 @@ public interface ProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteProductBatch(String callbackURL, Object object)
+		public Product getSiteProduct(Long siteId, Long productId)
 			throws Exception {
 
-			HttpInvoker.HttpResponse httpResponse =
-				deleteProductBatchHttpResponse(callbackURL, object);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-		}
-
-		public HttpInvoker.HttpResponse deleteProductBatchHttpResponse(
-				String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(object.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.DELETE);
-
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/batch");
-
-			if ((_builder._login != null) && (_builder._password != null)) {
-				httpInvoker.userNameAndPassword(
-					_builder._login + ":" + _builder._password);
-			}
-
-			return httpInvoker.invoke();
-		}
-
-		public Product getProduct(Long productId) throws Exception {
-			HttpInvoker.HttpResponse httpResponse = getProductHttpResponse(
-				productId);
+			HttpInvoker.HttpResponse httpResponse = getSiteProductHttpResponse(
+				siteId, productId);
 
 			String content = httpResponse.getContent();
 
@@ -460,7 +361,8 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse getProductHttpResponse(Long productId)
+		public HttpInvoker.HttpResponse getSiteProductHttpResponse(
+				Long siteId, Long productId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -487,8 +389,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/{productId}");
+						"/o/product-rest/v1.0/sites/{siteId}/products/{productId}");
 
+			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("productId", productId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {
@@ -499,14 +402,16 @@ public interface ProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public Page<Product> getProductsPage(
-				String search, String status, Long categoryId, Long tagId,
-				Boolean inStock, Pagination pagination, String sortString)
+		public Page<Product> getSiteProductsPage(
+				Long siteId, String search, String status, Long categoryId,
+				Long tagId, Boolean inStock, Pagination pagination,
+				String sortString)
 			throws Exception {
 
-			HttpInvoker.HttpResponse httpResponse = getProductsPageHttpResponse(
-				search, status, categoryId, tagId, inStock, pagination,
-				sortString);
+			HttpInvoker.HttpResponse httpResponse =
+				getSiteProductsPageHttpResponse(
+					siteId, search, status, categoryId, tagId, inStock,
+					pagination, sortString);
 
 			String content = httpResponse.getContent();
 
@@ -567,9 +472,10 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse getProductsPageHttpResponse(
-				String search, String status, Long categoryId, Long tagId,
-				Boolean inStock, Pagination pagination, String sortString)
+		public HttpInvoker.HttpResponse getSiteProductsPageHttpResponse(
+				Long siteId, String search, String status, Long categoryId,
+				Long tagId, Boolean inStock, Pagination pagination,
+				String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -627,7 +533,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products");
+						"/o/product-rest/v1.0/sites/{siteId}/products");
+
+			httpInvoker.path("siteId", siteId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {
 				httpInvoker.userNameAndPassword(
@@ -637,9 +545,11 @@ public interface ProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public Product postProduct(Product product) throws Exception {
-			HttpInvoker.HttpResponse httpResponse = postProductHttpResponse(
-				product);
+		public Product postSiteProduct(Long siteId, Product product)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse = postSiteProductHttpResponse(
+				siteId, product);
 
 			String content = httpResponse.getContent();
 
@@ -700,7 +610,8 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse postProductHttpResponse(Product product)
+		public HttpInvoker.HttpResponse postSiteProductHttpResponse(
+				Long siteId, Product product)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -729,7 +640,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products");
+						"/o/product-rest/v1.0/sites/{siteId}/products");
+
+			httpInvoker.path("siteId", siteId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {
 				httpInvoker.userNameAndPassword(
@@ -739,11 +652,12 @@ public interface ProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public void postProductBatch(String callbackURL, Object object)
+		public void postSiteProductBatch(
+				Long siteId, String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postProductBatchHttpResponse(callbackURL, object);
+				postSiteProductBatchHttpResponse(siteId, callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -793,8 +707,8 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse postProductBatchHttpResponse(
-				String callbackURL, Object object)
+		public HttpInvoker.HttpResponse postSiteProductBatchHttpResponse(
+				Long siteId, String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -828,7 +742,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/batch");
+						"/o/product-rest/v1.0/sites/{siteId}/products/batch");
+
+			httpInvoker.path("siteId", siteId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {
 				httpInvoker.userNameAndPassword(
@@ -838,11 +754,12 @@ public interface ProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public Product putProduct(Long productId, Product product)
+		public Product putSiteProduct(
+				Long siteId, Long productId, Product product)
 			throws Exception {
 
-			HttpInvoker.HttpResponse httpResponse = putProductHttpResponse(
-				productId, product);
+			HttpInvoker.HttpResponse httpResponse = putSiteProductHttpResponse(
+				siteId, productId, product);
 
 			String content = httpResponse.getContent();
 
@@ -903,8 +820,8 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse putProductHttpResponse(
-				Long productId, Product product)
+		public HttpInvoker.HttpResponse putSiteProductHttpResponse(
+				Long siteId, Long productId, Product product)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -933,8 +850,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/{productId}");
+						"/o/product-rest/v1.0/sites/{siteId}/products/{productId}");
 
+			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("productId", productId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {
@@ -945,111 +863,14 @@ public interface ProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public void putProductBatch(String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse = putProductBatchHttpResponse(
-				callbackURL, object);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
-			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-		}
-
-		public HttpInvoker.HttpResponse putProductBatchHttpResponse(
-				String callbackURL, Object object)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			httpInvoker.body(object.toString(), "application/json");
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
-
-			if (callbackURL != null) {
-				httpInvoker.parameter(
-					"callbackURL", String.valueOf(callbackURL));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/batch");
-
-			if ((_builder._login != null) && (_builder._password != null)) {
-				httpInvoker.userNameAndPassword(
-					_builder._login + ":" + _builder._password);
-			}
-
-			return httpInvoker.invoke();
-		}
-
-		public Product putProductCategories(
-				Long productId, ProductCategories productCategories)
+		public Product putSiteProductCategories(
+				Long siteId, Long productId,
+				ProductCategories productCategories)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				putProductCategoriesHttpResponse(productId, productCategories);
+				putSiteProductCategoriesHttpResponse(
+					siteId, productId, productCategories);
 
 			String content = httpResponse.getContent();
 
@@ -1110,8 +931,9 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse putProductCategoriesHttpResponse(
-				Long productId, ProductCategories productCategories)
+		public HttpInvoker.HttpResponse putSiteProductCategoriesHttpResponse(
+				Long siteId, Long productId,
+				ProductCategories productCategories)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1140,8 +962,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/{productId}/categories");
+						"/o/product-rest/v1.0/sites/{siteId}/products/{productId}/categories");
 
+			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("productId", productId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {
@@ -1152,11 +975,12 @@ public interface ProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public Product putProductTags(Long productId, ProductTags productTags)
+		public Product putSiteProductTags(
+				Long siteId, Long productId, ProductTags productTags)
 			throws Exception {
 
-			HttpInvoker.HttpResponse httpResponse = putProductTagsHttpResponse(
-				productId, productTags);
+			HttpInvoker.HttpResponse httpResponse =
+				putSiteProductTagsHttpResponse(siteId, productId, productTags);
 
 			String content = httpResponse.getContent();
 
@@ -1217,8 +1041,8 @@ public interface ProductResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse putProductTagsHttpResponse(
-				Long productId, ProductTags productTags)
+		public HttpInvoker.HttpResponse putSiteProductTagsHttpResponse(
+				Long siteId, Long productId, ProductTags productTags)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1247,8 +1071,9 @@ public interface ProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/product-rest/v1.0/products/{productId}/tags");
+						"/o/product-rest/v1.0/sites/{siteId}/products/{productId}/tags");
 
+			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("productId", productId);
 
 			if ((_builder._login != null) && (_builder._password != null)) {

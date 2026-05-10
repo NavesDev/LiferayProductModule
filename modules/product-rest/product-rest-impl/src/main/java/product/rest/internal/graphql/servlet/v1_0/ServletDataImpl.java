@@ -72,46 +72,39 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
-						"mutation#deleteProduct",
+						"mutation#deleteSiteProduct",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "deleteProduct"));
+							ProductResourceImpl.class, "deleteSiteProduct"));
 					put(
-						"mutation#deleteProductBatch",
+						"mutation#createSiteProduct",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "deleteProductBatch"));
+							ProductResourceImpl.class, "postSiteProduct"));
 					put(
-						"mutation#createProduct",
+						"mutation#createSiteProductBatch",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "postProduct"));
+							ProductResourceImpl.class, "postSiteProductBatch"));
 					put(
-						"mutation#createProductBatch",
+						"mutation#updateSiteProduct",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "postProductBatch"));
+							ProductResourceImpl.class, "putSiteProduct"));
 					put(
-						"mutation#updateProduct",
+						"mutation#updateSiteProductCategories",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "putProduct"));
+							ProductResourceImpl.class,
+							"putSiteProductCategories"));
 					put(
-						"mutation#updateProductBatch",
+						"mutation#updateSiteProductTags",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "putProductBatch"));
-					put(
-						"mutation#updateProductCategories",
-						new ObjectValuePair<>(
-							ProductResourceImpl.class, "putProductCategories"));
-					put(
-						"mutation#updateProductTags",
-						new ObjectValuePair<>(
-							ProductResourceImpl.class, "putProductTags"));
+							ProductResourceImpl.class, "putSiteProductTags"));
 
 					put(
 						"query#product",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "getProduct"));
+							ProductResourceImpl.class, "getSiteProduct"));
 					put(
 						"query#products",
 						new ObjectValuePair<>(
-							ProductResourceImpl.class, "getProductsPage"));
+							ProductResourceImpl.class, "getSiteProductsPage"));
 				}
 			};
 

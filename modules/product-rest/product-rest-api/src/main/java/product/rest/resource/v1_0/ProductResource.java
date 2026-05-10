@@ -43,34 +43,33 @@ import product.rest.dto.v1_0.ProductTags;
 @ProviderType
 public interface ProductResource {
 
-	public Response deleteProduct(Long productId) throws Exception;
-
-	public Response deleteProductBatch(String callbackURL, Object object)
+	public Response deleteSiteProduct(Long siteId, Long productId)
 		throws Exception;
 
-	public Product getProduct(Long productId) throws Exception;
+	public Product getSiteProduct(Long siteId, Long productId) throws Exception;
 
-	public Page<Product> getProductsPage(
-			String search, String status, Long categoryId, Long tagId,
-			Boolean inStock, Pagination pagination,
+	public Page<Product> getSiteProductsPage(
+			Long siteId, String search, String status, Long categoryId,
+			Long tagId, Boolean inStock, Pagination pagination,
 			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Product postProduct(Product product) throws Exception;
-
-	public Response postProductBatch(String callbackURL, Object object)
+	public Product postSiteProduct(Long siteId, Product product)
 		throws Exception;
 
-	public Product putProduct(Long productId, Product product) throws Exception;
-
-	public Response putProductBatch(String callbackURL, Object object)
+	public Response postSiteProductBatch(
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
-	public Product putProductCategories(
-			Long productId, ProductCategories productCategories)
+	public Product putSiteProduct(Long siteId, Long productId, Product product)
 		throws Exception;
 
-	public Product putProductTags(Long productId, ProductTags productTags)
+	public Product putSiteProductCategories(
+			Long siteId, Long productId, ProductCategories productCategories)
+		throws Exception;
+
+	public Product putSiteProductTags(
+			Long siteId, Long productId, ProductTags productTags)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
