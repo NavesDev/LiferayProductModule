@@ -1,0 +1,5 @@
+Bundle-Name: product-rest-test
+Bundle-SymbolicName: product.rest.test
+Bundle-Version: 1.0.0
+-includeresource: product.rest.client.jar=../product-rest-client/build/libs/product.rest.client-1.0.0.jar;lib:=true
+-provider-policy: ${replacestring;${range;[==,==]};.*,(.*)];$1}

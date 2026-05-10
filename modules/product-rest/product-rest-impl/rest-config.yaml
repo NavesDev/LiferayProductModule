@@ -1,0 +1,9 @@
+apiDir: "../product-rest-api/src/main/java"
+apiPackagePath: "product.rest"
+application:
+    baseURI: "/product-rest"
+    className: "ProductRestApplication"
+    name: "ProductRest"
+author: "naves"
+clientDir: "../product-rest-client/src/main/java"
+testDir: "../product-rest-test/src/testIntegration/java"

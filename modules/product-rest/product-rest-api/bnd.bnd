@@ -1,0 +1,6 @@
+Bundle-Name: product-rest-api
+Bundle-SymbolicName: product.rest.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	product.rest.dto.v1_0,\
+	product.rest.resource.v1_0
