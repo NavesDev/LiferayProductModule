@@ -22,6 +22,8 @@
         <column name="name" type="String" />
         <column name="description" type="String" db-type="TEXT" />
         <column name="price" type="double" />
+        <column name="status" type="int" />
+        <column name="stockQuantity" type="int" />
 
         <!-- Order -->
         <order by="asc">
