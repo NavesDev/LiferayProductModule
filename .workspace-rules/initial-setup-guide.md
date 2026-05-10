@@ -12,16 +12,33 @@ Initial setup guide for users brand new to Liferay Workspace
 
 For a first time user, follow this sequence
 
+- Use Java `17.0.12-oracle` for this workspace
+	- Example setup:
+	```bash
+	export JAVA_HOME=/usr/lib/jvm/java-17-oracle
+	export PATH="$JAVA_HOME/bin:$PATH"
+	java -version
+	```
+	- Confirm `java -version` reports Java `17.0.12-oracle`
+
 - Check for `gradle.properties` and `settings.gradle` in the root directory
 	- If missing, instruct the user to run `blade init -v [version]`
 	- Explain the Liferay Workspace is a generated set of folders and Gradle scripts that manage your SDK and server in one place
 	- If the files exist, skip to step 3
 
 - Instruct the user to run `blade server init`
+	- Ready-to-use command:
+	```bash
+	blade server init
+	```
 - Explain this downloads the actual Liferay Portal (Tomcat bundle) into the `/bundles` folder
 - Confirm the `/bundles` folder exists before proceeding
 
 - Instruct user to run `blade server start`
+	- Recommended command:
+	```bash
+	blade server start -t
+	```
 	- Direct the user to watch the logs at `bundles/tomcat/logs/catalina.out`
 	- Inform the user there are different variations depending on their use case
 		- `blade server start -t` starts the server and automatically tails the logs (catalina.out)
