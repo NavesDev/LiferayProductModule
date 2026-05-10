@@ -102,6 +102,11 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			product = productPersistence.update(product);
 		}
 		catch (RuntimeException runtimeException) {
+			_log.error(
+				"Failed to persist product for userId=" + userId + ", groupId=" +
+					groupId,
+				runtimeException);
+
 			throw new ProductPersistenceException(
 				"Unable to persist product for userId " + userId +
 					" and groupId " + groupId,
@@ -114,6 +119,11 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 				productId, false, true, true);
 		}
 		catch (PortalException portalException) {
+			_log.error(
+				"Failed to add resources for productId=" + productId +
+					", groupId=" + groupId + ", userId=" + userId,
+				portalException);
+
 			throw new ProductResourceException(
 				"Unable to add resources for productId " + productId,
 				portalException);
@@ -123,6 +133,12 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			_updateAsset(product, validatedCategoryIds, tagNames, serviceContext);
 		}
 		catch (PortalException portalException) {
+			_log.error(
+				"Failed to update asset for productId=" + productId +
+					", categoryIds=" + Arrays.toString(validatedCategoryIds) +
+					", tagNames=" + Arrays.toString(tagNames),
+				portalException);
+
 			throw new ProductAssetUpdateException(
 				"Unable to update asset for productId " + productId,
 				portalException);
