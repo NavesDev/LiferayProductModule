@@ -258,8 +258,8 @@ class ProductLocalServiceImplTest {
 	class DeleteProduct {
 
 		@Test
-		@DisplayName("Dado produto existente, quando remover, entao limpa recursos associados")
-		void dado_produtoExistente_quando_remover_entao_limpaRecursosAssociados()
+		@DisplayName("Dado produto existente, quando remover, entao remove asset e persiste exclusao")
+		void dado_produtoExistente_quando_remover_entao_removeAssetEPersisteExclusao()
 			throws Exception {
 
 			// Arrange
@@ -275,8 +275,7 @@ class ProductLocalServiceImplTest {
 			assertThat(deletedProduct).isSameAs(product);
 			verify(assetEntryLocalService).deleteEntry(
 				Product.class.getName(), PRODUCT_ID);
-			verify(resourceLocalService).deleteResource(
-				COMPANY_ID, Product.class.getName(), 4, PRODUCT_ID);
+			verify(productPersistence).remove(product);
 		}
 	}
 

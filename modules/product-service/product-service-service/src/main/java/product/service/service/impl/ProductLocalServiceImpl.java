@@ -14,7 +14,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.Validator;
@@ -29,7 +28,6 @@ import org.osgi.service.component.annotations.Reference;
 import product.service.exception.ProductCategoryException;
 import product.service.exception.ProductAssetUpdateException;
 import product.service.exception.ProductPersistenceException;
-import product.service.exception.ProductResourceException;
 import product.service.exception.ProductStatusException;
 import product.service.exception.ProductTagException;
 import product.service.exception.ProductUserException;
@@ -114,22 +112,6 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		}
 
 		try {
-			resourceLocalService.addResources(
-				product.getCompanyId(), groupId, userId, Product.class.getName(),
-				productId, false, true, true);
-		}
-		catch (PortalException portalException) {
-			_log.error(
-				"Failed to add resources for productId=" + productId +
-					", groupId=" + groupId + ", userId=" + userId,
-				portalException);
-
-			throw new ProductResourceException(
-				"Unable to add resources for productId " + productId,
-				portalException);
-		}
-
-		try {
 			_updateAsset(product, validatedCategoryIds, tagNames, serviceContext);
 		}
 		catch (PortalException portalException) {
@@ -171,22 +153,6 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		}
 
 		_deleteAssetEntry(product.getProductId());
-
-		try {
-			resourceLocalService.deleteResource(
-				product.getCompanyId(), Product.class.getName(),
-				ResourceConstants.SCOPE_INDIVIDUAL, product.getProductId());
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"deleteProduct failed to remove resource for productId=" +
-						product.getProductId(),
-					portalException);
-			}
-
-			throw new SystemException(portalException);
-		}
 
 		Product removedProduct = productPersistence.remove(product);
 
