@@ -508,8 +508,8 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 			product.getModifiedDate(), Product.class.getName(),
 			product.getProductId(), product.getUuid(), 0L, categoryIds, tagNames,
 			visible, visible, null, null, null, null, null, product.getName(),
-			product.getDescription(), null, null, null, 0, 0, product.getPrice(),
-			serviceContext);
+			product.getDescription(), product.getDescription(), null, null, 0, 0,
+			product.getPrice(), serviceContext);
 	}
 
 	private long[] _validateCategories(long groupId, long[] categoryIds)
