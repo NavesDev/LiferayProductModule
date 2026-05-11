@@ -1,3 +1,7 @@
+configurations {
+	portalTestBundle
+}
+
 dependencies {
 	testIntegrationImplementation group: "com.liferay.portal", name: "release.portal.api"
 	testIntegrationImplementation group: "com.liferay.portal", name: "com.liferay.portal.test", version: "24.6.1"
@@ -7,12 +11,45 @@ dependencies {
 	testIntegrationImplementation group: "org.apache.logging.log4j", name: "log4j-core", version: "2.17.2"
 	testIntegrationImplementation group: "org.apache.logging.log4j", name: "log4j-api", version: "2.17.2"
 	testIntegrationImplementation "biz.aQute.bnd:aQute.libg:6.4.0"
+	portalTestBundle group: "com.liferay.portal", name: "com.liferay.portal.test", version: "24.6.1"
 	testIntegrationImplementation project(":modules:product-service:product-service-api")
 	testIntegrationImplementation project(":modules:product-service:product-service-service")
 }
 
 testIntegration {
+	dependsOn "syncProductServiceBundles"
+	dependsOn "syncPortalTestBundle"
+
 	jvmArgs += ["-Dorg.jboss.logging.provider=jdk"]
+}
+
+tasks.register("syncProductServiceBundles", Copy) {
+	from(project(":modules:product-service:product-service-api").tasks.named("jar")) {
+		rename {
+			"product.service.api.jar"
+		}
+	}
+
+	from(project(":modules:product-service:product-service-service").tasks.named("jar")) {
+		rename {
+			"product.service.service.jar"
+		}
+	}
+
+	into file("${rootProject.projectDir}/bundles/osgi/modules")
+}
+
+tasks.register("syncPortalTestBundle", Copy) {
+	from configurations.portalTestBundle
+	into file("${rootProject.projectDir}/bundles/osgi/test")
+	rename {
+		"com.liferay.portal.test.jar"
+	}
+}
+
+tasks.named("setUpTestableTomcat") {
+	dependsOn "syncProductServiceBundles"
+	dependsOn "syncPortalTestBundle"
 }
 
 testIntegrationTomcat {
