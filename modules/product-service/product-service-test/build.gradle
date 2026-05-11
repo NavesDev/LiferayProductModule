@@ -1,0 +1,26 @@
+dependencies {
+	testIntegrationImplementation group: "com.liferay.portal", name: "release.portal.api"
+	testIntegrationImplementation group: "com.liferay.portal", name: "com.liferay.portal.test", version: "24.6.1"
+	testIntegrationImplementation group: "com.liferay.portal", name: "com.liferay.portal.test.integration", version: "6.0.36"
+	testIntegrationImplementation group: "com.liferay", name: "com.liferay.arquillian.extension.junit.bridge", version: "1.0.21"
+	testIntegrationImplementation group: "junit", name: "junit", version: "4.13.2"
+	testIntegrationImplementation group: "org.apache.logging.log4j", name: "log4j-core", version: "2.17.2"
+	testIntegrationImplementation group: "org.apache.logging.log4j", name: "log4j-api", version: "2.17.2"
+	testIntegrationImplementation "biz.aQute.bnd:aQute.libg:6.4.0"
+	testIntegrationImplementation project(":modules:product-service:product-service-api")
+	testIntegrationImplementation project(":modules:product-service:product-service-service")
+}
+
+testIntegration {
+	jvmArgs += ["-Dorg.jboss.logging.provider=jdk"]
+}
+
+testIntegrationTomcat {
+	dir = file("${rootProject.projectDir}/bundles/tomcat")
+	liferayHome = file("${rootProject.projectDir}/bundles")
+}
+
+configurations.testIntegrationImplementation {
+	exclude group: "org.slf4j", module: "slf4j-log4j12"
+	exclude group: "log4j", module: "log4j"
+}

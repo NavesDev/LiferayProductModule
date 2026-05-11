@@ -1,0 +1,3 @@
+Bundle-Name: product-service-test
+Bundle-SymbolicName: product.service.test
+Bundle-Version: 1.0.0
