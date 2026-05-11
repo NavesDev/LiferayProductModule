@@ -161,8 +161,8 @@ class ProductResourceImplTest {
 			ProductImpl draftOutStock = _product(2L, "Mouse", 0);
 			draftOutStock.setStatus(0);
 
-			when(productLocalService.getProducts(0, Integer.MAX_VALUE)).thenReturn(
-				List.of(publishedInStock, draftOutStock));
+				when(productLocalService.getProductsByGroupId(SITE_ID)).thenReturn(
+					List.of(publishedInStock, draftOutStock));
 			when(
 				assetEntryLocalService.getEntry(
 					product.service.model.Product.class.getName(), 1L)

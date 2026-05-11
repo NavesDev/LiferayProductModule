@@ -303,6 +303,10 @@ public class ProductLocalServiceUtil {
 		return getService().getProducts(start, end);
 	}
 
+	public static List<Product> getProductsByGroupId(long groupId) {
+		return getService().getProductsByGroupId(groupId);
+	}
+
 	/**
 	 * Returns all the products matching the UUID and company.
 	 *

@@ -104,8 +104,8 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 					(pagination != null) + ")");
 		}
 
-		List<product.service.model.Product> products = _productLocalService.getProducts(
-			0, Integer.MAX_VALUE);
+		List<product.service.model.Product> products =
+			_productLocalService.getProductsByGroupId(siteId);
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(

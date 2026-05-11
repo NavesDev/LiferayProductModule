@@ -270,6 +270,9 @@ public interface ProductLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Product> getProducts(int start, int end);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Product> getProductsByGroupId(long groupId);
+
 	/**
 	 * Returns all the products matching the UUID and company.
 	 *

@@ -315,6 +315,14 @@ public class ProductLocalServiceImpl extends ProductLocalServiceBaseImpl {
 		return product;
 	}
 
+	public java.util.List<Product> getProductsByGroupId(long groupId) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("getProductsByGroupId(groupId=" + groupId + ")");
+		}
+
+		return productPersistence.findByGroupId(groupId);
+	}
+
 	private void _deleteAssetEntry(long productId) {
 		if (_log.isDebugEnabled()) {
 			_log.debug("_deleteAssetEntry(productId=" + productId + ")");

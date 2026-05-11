@@ -337,6 +337,13 @@ public class ProductLocalServiceWrapper
 		return _productLocalService.getProducts(start, end);
 	}
 
+	@Override
+	public java.util.List<product.service.model.Product> getProductsByGroupId(
+		long groupId) {
+
+		return _productLocalService.getProductsByGroupId(groupId);
+	}
+
 	/**
 	 * Returns all the products matching the UUID and company.
 	 *
