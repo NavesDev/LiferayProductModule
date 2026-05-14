@@ -2,6 +2,7 @@ package product.service.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -9,11 +10,11 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
@@ -25,7 +26,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 
 import java.util.Date;
-import java.lang.reflect.Field;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,11 +35,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import product.service.exception.ProductCategoryException;
 import product.service.exception.ProductStatusException;
+import product.service.exception.ProductTagException;
 import product.service.exception.ProductValidationException;
 import product.service.model.Product;
 import product.service.model.ProductStatusConstants;
@@ -68,6 +71,9 @@ class ProductLocalServiceImplTest {
 	private AssetCategoryLocalService assetCategoryLocalService;
 
 	@Mock
+	private AssetEntry assetEntry;
+
+	@Mock
 	private AssetEntryLocalService assetEntryLocalService;
 
 	@Mock
@@ -94,23 +100,12 @@ class ProductLocalServiceImplTest {
 	@Captor
 	private ArgumentCaptor<Product> productArgumentCaptor;
 
+	@InjectMocks
 	private ProductLocalServiceImpl productLocalService;
 
 	@BeforeEach
-	void setUp() throws Exception {
-		productLocalService = new ProductLocalServiceImpl();
-
-		_setField(
-			productLocalService, "assetCategoryLocalService",
-			assetCategoryLocalService);
-		_setField(
-			productLocalService, "assetEntryLocalService", assetEntryLocalService);
-		_setField(productLocalService, "assetTagLocalService", assetTagLocalService);
-		_setField(productLocalService, "counterLocalService", counterLocalService);
-		_setField(productLocalService, "productPersistence", productPersistence);
-		_setField(
-			productLocalService, "resourceLocalService", resourceLocalService);
-		_setField(productLocalService, "userLocalService", userLocalService);
+	void setUp() {
+		assertThat(productLocalService).isNotNull();
 	}
 
 	@Nested
@@ -229,6 +224,170 @@ class ProductLocalServiceImplTest {
 					new long[] {CATEGORY_ID}, new long[0], serviceContext)
 			).isInstanceOf(ProductCategoryException.class);
 		}
+
+	}
+
+	@Nested
+	@DisplayName("Buscar produtos por grupo")
+	class GetProductsByGroupId {
+
+		@Test
+		@DisplayName("Dado grupo com produtos, quando buscar, entao retorna lista do grupo")
+		void dado_grupoComProdutos_quando_buscar_entao_retornaListaDoGrupo() {
+
+			// Arrange
+			Product p1 = _product(ProductStatusConstants.DRAFT);
+			Product p2 = _product(ProductStatusConstants.PUBLISHED);
+
+			when(productPersistence.findByGroupId(GROUP_ID)).thenReturn(
+				List.of(p1, p2));
+
+			// Act
+			List<Product> result = productLocalService.getProductsByGroupId(GROUP_ID);
+
+			// Assert
+			assertThat(result).hasSize(2).containsExactly(p1, p2);
+
+			verify(productPersistence).findByGroupId(GROUP_ID);
+		}
+
+		@Test
+		@DisplayName("Dado grupo sem produtos, quando buscar, entao retorna lista vazia")
+		void dado_grupoSemProdutos_quando_buscar_entao_retornaListaVazia() {
+
+			// Arrange
+			when(productPersistence.findByGroupId(GROUP_ID)).thenReturn(List.of());
+
+			// Act
+			List<Product> result = productLocalService.getProductsByGroupId(GROUP_ID);
+
+			// Assert
+			assertThat(result).isEmpty();
+
+			verify(productPersistence).findByGroupId(GROUP_ID);
+		}
+
+	}
+
+	@Nested
+	@DisplayName("Atualizar categorias do produto")
+	class UpdateProductCategories {
+
+		@Test
+		@DisplayName("Dado produto draft com categoria valida, quando atualizar, entao sincroniza asset")
+		void dado_produtoDraftComCategoriaValida_quando_atualizar_entao_sincronizaAsset()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getTagNames()).thenReturn(new String[] {"tag"});
+
+			// Act
+			Product result = productLocalService.updateProductCategories(
+				PRODUCT_ID, new long[] {CATEGORY_ID}, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+
+			verify(assetEntryLocalService).updateEntry(
+				anyLong(), anyLong(), any(Date.class), any(Date.class),
+				anyString(), anyLong(), anyString(), anyLong(),
+				aryEq(new long[] {CATEGORY_ID}), any(String[].class),
+				anyBoolean(), anyBoolean(), nullable(Date.class),
+				nullable(Date.class), nullable(Date.class), nullable(Date.class),
+				nullable(String.class), anyString(), anyString(),
+				nullable(String.class), nullable(String.class),
+				nullable(String.class), anyInt(), anyInt(), anyDouble(),
+				any(ServiceContext.class));
+		}
+
+		@Test
+		@DisplayName("Dado produto published sem categorias, quando atualizar, entao rejeita")
+		void dado_produtoPublishedSemCategorias_quando_atualizar_entao_rejeita()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.PUBLISHED);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.updateProductCategories(
+					PRODUCT_ID, new long[0], _serviceContext())
+			).isInstanceOf(ProductValidationException.class);
+		}
+
+	}
+
+	@Nested
+	@DisplayName("Atualizar tags do produto")
+	class UpdateProductTags {
+
+		@Test
+		@DisplayName("Dado produto com tags validas, quando atualizar, entao sincroniza asset com novas tags")
+		void dado_produtoComTagsValidas_quando_atualizar_entao_sincronizaAssetComNovasTags()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetTagLocalService.fetchAssetTag(TAG_ID)).thenReturn(assetTag);
+			when(assetTag.getGroupId()).thenReturn(GROUP_ID);
+			when(assetTag.getName()).thenReturn("nova-tag");
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[] {CATEGORY_ID});
+
+			// Act
+			Product result = productLocalService.updateProductTags(
+				PRODUCT_ID, new long[] {TAG_ID}, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+
+			verify(assetEntryLocalService).updateEntry(
+				anyLong(), anyLong(), any(Date.class), any(Date.class),
+				anyString(), anyLong(), anyString(), anyLong(),
+				any(long[].class), aryEq(new String[] {"nova-tag"}),
+				anyBoolean(), anyBoolean(), nullable(Date.class),
+				nullable(Date.class), nullable(Date.class), nullable(Date.class),
+				nullable(String.class), anyString(), anyString(),
+				nullable(String.class), nullable(String.class),
+				nullable(String.class), anyInt(), anyInt(), anyDouble(),
+				any(ServiceContext.class));
+		}
+
+		@Test
+		@DisplayName("Dado tag de outro grupo, quando atualizar, entao rejeita")
+		void dado_tagDeOutroGrupo_quando_atualizar_entao_rejeita()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetTagLocalService.fetchAssetTag(TAG_ID)).thenReturn(assetTag);
+			when(assetTag.getGroupId()).thenReturn(99999L);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[0]);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.updateProductTags(
+					PRODUCT_ID, new long[] {TAG_ID}, _serviceContext())
+			).isInstanceOf(ProductTagException.class);
+		}
+
 	}
 
 	@Nested
@@ -251,6 +410,36 @@ class ProductLocalServiceImplTest {
 					PRODUCT_ID, ProductStatusConstants.DRAFT, _serviceContext())
 			).isInstanceOf(ProductStatusException.class);
 		}
+
+		@Test
+		@DisplayName("Dado draft valido com categoria, quando publicar, entao atualiza status e sincroniza asset")
+		void dado_draftValidoComCategoria_quando_publicar_entao_atualizaStatusESincronizaAsset()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[] {CATEGORY_ID});
+			when(assetEntry.getTagNames()).thenReturn(new String[] {"tag-1"});
+
+			// Act
+			Product updated = productLocalService.updateProductStatus(
+				PRODUCT_ID, ProductStatusConstants.PUBLISHED, _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.PUBLISHED);
+
+			verify(productPersistence).update(productArgumentCaptor.capture());
+
+			assertThat(productArgumentCaptor.getValue().getStatus()).isEqualTo(
+				ProductStatusConstants.PUBLISHED);
+		}
+
 	}
 
 	@Nested
@@ -273,10 +462,12 @@ class ProductLocalServiceImplTest {
 
 			// Assert
 			assertThat(deletedProduct).isSameAs(product);
+
 			verify(assetEntryLocalService).deleteEntry(
 				Product.class.getName(), PRODUCT_ID);
 			verify(productPersistence).remove(product);
 		}
+
 	}
 
 	private Product _product(int status) {
@@ -307,28 +498,6 @@ class ProductLocalServiceImplTest {
 		serviceContext.setUserId(USER_ID);
 
 		return serviceContext;
-	}
-
-	private void _setField(Object target, String fieldName, Object value)
-		throws Exception {
-
-		Class<?> clazz = target.getClass();
-
-		while (clazz != null) {
-			try {
-				Field field = clazz.getDeclaredField(fieldName);
-
-				field.setAccessible(true);
-				field.set(target, value);
-
-				return;
-			}
-			catch (NoSuchFieldException noSuchFieldException) {
-				clazz = clazz.getSuperclass();
-			}
-		}
-
-		throw new NoSuchFieldException(fieldName);
 	}
 
 }
