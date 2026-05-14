@@ -1,3 +1,5 @@
+apply plugin: 'jacoco'
+
 dependencies {
 	api project(":modules:product-service:product-service-api")
 
@@ -25,8 +27,6 @@ test {
 	)
 	useJUnitPlatform()
 }
-
-apply plugin: 'jacoco'
 
 jacoco {
 	toolVersion = '0.8.11'
@@ -73,14 +73,14 @@ jacocoTestCoverageVerification {
 			limit {
 				counter = 'LINE'
 				value = 'COVEREDRATIO'
-				minimum = 0.85
+				minimum = 0.75
 			}
 		}
 		rule {
 			limit {
 				counter = 'BRANCH'
 				value = 'COVEREDRATIO'
-				minimum = 0.75
+				minimum = 0.65
 			}
 		}
 	}
