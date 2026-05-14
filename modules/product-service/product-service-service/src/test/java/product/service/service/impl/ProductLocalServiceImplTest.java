@@ -11,6 +11,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -21,14 +23,18 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.counter.kernel.service.CounterLocalService;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 
+import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -40,9 +46,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import product.service.exception.ProductAssetUpdateException;
 import product.service.exception.ProductCategoryException;
+import product.service.exception.ProductPersistenceException;
 import product.service.exception.ProductStatusException;
 import product.service.exception.ProductTagException;
+import product.service.exception.ProductUserException;
 import product.service.exception.ProductValidationException;
 import product.service.model.Product;
 import product.service.model.ProductStatusConstants;
@@ -172,6 +181,35 @@ class ProductLocalServiceImplTest {
 		}
 
 		@Test
+		@DisplayName("Dado serviceContext nulo, quando adicionar, entao cria novo serviceContext e persiste")
+		void dado_serviceContextNulo_quando_adicionar_entao_criaNovoeServiceContextEPersiste()
+			throws Exception {
+
+			// Arrange
+			Product createdProduct = new ProductImpl();
+
+			createdProduct.setProductId(PRODUCT_ID);
+
+			when(counterLocalService.increment(Product.class.getName())).thenReturn(
+				PRODUCT_ID);
+			when(productPersistence.create(PRODUCT_ID)).thenReturn(createdProduct);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(userLocalService.getUser(USER_ID)).thenReturn(user);
+			when(user.getCompanyId()).thenReturn(COMPANY_ID);
+			when(user.getFullName()).thenReturn(USER_NAME);
+
+			// Act
+			Product product = productLocalService.addProduct(
+				USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+				ProductStatusConstants.DRAFT, STOCK_QUANTITY, new long[0],
+				new long[0], null);
+
+			// Assert
+			assertThat(product.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+		@Test
 		@DisplayName("Dado published sem categorias, quando adicionar, entao bloqueia publicacao")
 		void dado_publishedSemCategorias_quando_adicionar_entao_bloqueiaPublicacao()
 			throws Exception {
@@ -206,6 +244,42 @@ class ProductLocalServiceImplTest {
 		}
 
 		@Test
+		@DisplayName("Dado status invalido, quando adicionar, entao rejeita")
+		void dado_statusInvalido_quando_adicionar_entao_rejeita()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE, 999,
+					STOCK_QUANTITY, new long[0], new long[0], serviceContext)
+			).isInstanceOf(ProductStatusException.class);
+		}
+
+		@Test
+		@DisplayName("Dado userId invalido, quando adicionar, entao lanca ProductUserException")
+		void dado_userIdInvalido_quando_adicionar_entao_lancaProductUserException()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			when(userLocalService.getUser(USER_ID)).thenThrow(
+				new PortalException("User not found"));
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+					ProductStatusConstants.DRAFT, STOCK_QUANTITY, new long[0],
+					new long[0], serviceContext)
+			).isInstanceOf(ProductUserException.class);
+		}
+
+		@Test
 		@DisplayName("Dado categoria de outro grupo, quando adicionar, entao rejeita")
 		void dado_categoriaDeOutroGrupo_quando_adicionar_entao_rejeita()
 			throws Exception {
@@ -224,6 +298,452 @@ class ProductLocalServiceImplTest {
 					ProductStatusConstants.DRAFT, STOCK_QUANTITY,
 					new long[] {CATEGORY_ID}, new long[0], serviceContext)
 			).isInstanceOf(ProductCategoryException.class);
+		}
+
+		@Test
+		@DisplayName("Dado categoria nao encontrada, quando adicionar, entao lanca ProductCategoryException")
+		void dado_categoriaNaoEncontrada_quando_adicionar_entao_lancaProductCategoryException()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				null);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+					ProductStatusConstants.DRAFT, STOCK_QUANTITY,
+					new long[] {CATEGORY_ID}, new long[0], serviceContext)
+			).isInstanceOf(ProductCategoryException.class);
+		}
+
+		@Test
+		@DisplayName("Dado tag nao encontrada, quando adicionar, entao lanca ProductTagException")
+		void dado_tagNaoEncontrada_quando_adicionar_entao_lancaProductTagException()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			when(assetTagLocalService.fetchAssetTag(TAG_ID)).thenReturn(null);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+					ProductStatusConstants.DRAFT, STOCK_QUANTITY, new long[0],
+					new long[] {TAG_ID}, serviceContext)
+			).isInstanceOf(ProductTagException.class);
+		}
+
+		@Test
+		@DisplayName("Dado tag de outro grupo, quando adicionar, entao lanca ProductTagException")
+		void dado_tagDeOutroGrupo_quando_adicionar_entao_lancaProductTagException()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			when(assetTagLocalService.fetchAssetTag(TAG_ID)).thenReturn(assetTag);
+			when(assetTag.getGroupId()).thenReturn(99999L);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+					ProductStatusConstants.DRAFT, STOCK_QUANTITY, new long[0],
+					new long[] {TAG_ID}, serviceContext)
+			).isInstanceOf(ProductTagException.class);
+		}
+
+		@Test
+		@DisplayName("Dado falha na persistencia, quando adicionar, entao lanca ProductPersistenceException")
+		void dado_falhaНаPersistencia_quando_adicionar_entao_lancaProductPersistenceException()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+			Product createdProduct = new ProductImpl();
+
+			createdProduct.setProductId(PRODUCT_ID);
+
+			when(counterLocalService.increment(Product.class.getName())).thenReturn(
+				PRODUCT_ID);
+			when(productPersistence.create(PRODUCT_ID)).thenReturn(createdProduct);
+			when(productPersistence.update(any(Product.class))).thenThrow(
+				new RuntimeException("DB error"));
+			when(userLocalService.getUser(USER_ID)).thenReturn(user);
+			when(user.getCompanyId()).thenReturn(COMPANY_ID);
+			when(user.getFullName()).thenReturn(USER_NAME);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+					ProductStatusConstants.DRAFT, STOCK_QUANTITY, new long[0],
+					new long[0], serviceContext)
+			).isInstanceOf(ProductPersistenceException.class);
+		}
+
+		@Test
+		@DisplayName("Dado falha no asset update, quando adicionar, entao lanca ProductAssetUpdateException")
+		void dado_falhaNoAssetUpdate_quando_adicionar_entao_lancaProductAssetUpdateException()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+			Product createdProduct = new ProductImpl();
+
+			createdProduct.setProductId(PRODUCT_ID);
+
+			when(counterLocalService.increment(Product.class.getName())).thenReturn(
+				PRODUCT_ID);
+			when(productPersistence.create(PRODUCT_ID)).thenReturn(createdProduct);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(userLocalService.getUser(USER_ID)).thenReturn(user);
+			when(user.getCompanyId()).thenReturn(COMPANY_ID);
+			when(user.getFullName()).thenReturn(USER_NAME);
+			doThrow(new PortalException("asset error")).when(
+				assetEntryLocalService).updateEntry(
+					anyLong(), anyLong(), any(), any(), anyString(), anyLong(),
+					anyString(), anyLong(), any(long[].class), any(String[].class),
+					anyBoolean(), anyBoolean(), nullable(Date.class),
+					nullable(Date.class), nullable(Date.class), nullable(Date.class),
+					nullable(String.class), anyString(), anyString(),
+					nullable(String.class), nullable(String.class),
+					nullable(String.class), anyInt(), anyInt(), anyDouble(),
+					any(ServiceContext.class));
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+					ProductStatusConstants.DRAFT, STOCK_QUANTITY, new long[0],
+					new long[0], serviceContext)
+			).isInstanceOf(ProductAssetUpdateException.class);
+		}
+
+		@Test
+		@DisplayName("Dado published com todos os campos validos e categorias, quando adicionar, entao persiste publicado")
+		void dado_publishedComCamposValidosECategorias_quando_adicionar_entao_persistePublicado()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+			Product createdProduct = new ProductImpl();
+
+			createdProduct.setProductId(PRODUCT_ID);
+
+			when(counterLocalService.increment(Product.class.getName())).thenReturn(
+				PRODUCT_ID);
+			when(productPersistence.create(PRODUCT_ID)).thenReturn(createdProduct);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(userLocalService.getUser(USER_ID)).thenReturn(user);
+			when(user.getCompanyId()).thenReturn(COMPANY_ID);
+			when(user.getFullName()).thenReturn(USER_NAME);
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+
+			// Act
+			Product product = productLocalService.addProduct(
+				USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+				ProductStatusConstants.PUBLISHED, STOCK_QUANTITY,
+				new long[] {CATEGORY_ID}, new long[0], serviceContext);
+
+			// Assert
+			assertThat(product.getStatus()).isEqualTo(ProductStatusConstants.PUBLISHED);
+		}
+
+		@Test
+		@DisplayName("Dado published com nome em branco, quando adicionar, entao rejeita")
+		void dado_publishedComNomeEmBranco_quando_adicionar_entao_rejeita()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, "", DESCRIPTION, PRICE,
+					ProductStatusConstants.PUBLISHED, STOCK_QUANTITY,
+					new long[] {CATEGORY_ID}, new long[0], serviceContext)
+			).isInstanceOf(ProductValidationException.class);
+		}
+
+		@Test
+		@DisplayName("Dado published com descricao em branco, quando adicionar, entao rejeita")
+		void dado_publishedComDescricaoEmBranco_quando_adicionar_entao_rejeita()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, "", PRICE,
+					ProductStatusConstants.PUBLISHED, STOCK_QUANTITY,
+					new long[] {CATEGORY_ID}, new long[0], serviceContext)
+			).isInstanceOf(ProductValidationException.class);
+		}
+
+		@Test
+		@DisplayName("Dado published com preco negativo, quando adicionar, entao rejeita")
+		void dado_publishedComPrecoNegativo_quando_adicionar_entao_rejeita()
+			throws Exception {
+
+			// Arrange
+			ServiceContext serviceContext = _serviceContext();
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.addProduct(
+					USER_ID, GROUP_ID, NAME, DESCRIPTION, -1.0,
+					ProductStatusConstants.PUBLISHED, STOCK_QUANTITY,
+					new long[] {CATEGORY_ID}, new long[0], serviceContext)
+			).isInstanceOf(ProductValidationException.class);
+		}
+
+	}
+
+	@Nested
+	@DisplayName("Atualizar produto")
+	class UpdateProduct {
+
+		@Test
+		@DisplayName("Dado draft valido, quando atualizar, entao persiste alteracoes e sincroniza asset")
+		void dado_draftValido_quando_atualizar_entao_persisteAlteracoesESincronizaAsset()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+			when(assetTagLocalService.fetchAssetTag(TAG_ID)).thenReturn(assetTag);
+			when(assetTag.getGroupId()).thenReturn(GROUP_ID);
+			when(assetTag.getName()).thenReturn("tag-1");
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, "Novo nome", "Nova descricao", 199.90,
+				ProductStatusConstants.DRAFT, 5, new long[] {CATEGORY_ID},
+				new long[] {TAG_ID}, _serviceContext());
+
+			// Assert
+			assertThat(updated.getName()).isEqualTo("Novo nome");
+			assertThat(updated.getDescription()).isEqualTo("Nova descricao");
+			assertThat(updated.getPrice()).isEqualTo(199.90);
+			assertThat(updated.getStockQuantity()).isEqualTo(5);
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+
+			verify(productPersistence).update(productArgumentCaptor.capture());
+
+			assertThat(productArgumentCaptor.getValue().getName()).isEqualTo(
+				"Novo nome");
+		}
+
+		@Test
+		@DisplayName("Dado draft para published com categorias, quando atualizar, entao publica produto")
+		void dado_draftParaPublished_quando_atualizar_entao_publicaProduto()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE,
+				ProductStatusConstants.PUBLISHED, STOCK_QUANTITY,
+				new long[] {CATEGORY_ID}, new long[0], _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.PUBLISHED);
+		}
+
+		@Test
+		@DisplayName("Dado serviceContext nulo, quando atualizar, entao cria novo serviceContext")
+		void dado_serviceContextNulo_quando_atualizar_entao_criaNovoeServiceContext()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.DRAFT,
+				STOCK_QUANTITY, new long[0], new long[0], null);
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+		@Test
+		@DisplayName("Dado transicao invalida published para draft, quando atualizar, entao lanca ProductStatusException")
+		void dado_transicaoInvalidaPublishedParaDraft_quando_atualizar_entao_lancaProductStatusException()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.PUBLISHED);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.updateProduct(
+					PRODUCT_ID, NAME, DESCRIPTION, PRICE,
+					ProductStatusConstants.DRAFT, STOCK_QUANTITY, new long[0],
+					new long[0], _serviceContext())
+			).isInstanceOf(ProductStatusException.class);
+		}
+
+		@Test
+		@DisplayName("Dado estoque negativo, quando atualizar, entao lanca ProductValidationException")
+		void dado_estoqueNegativo_quando_atualizar_entao_lancaProductValidationException()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.updateProduct(
+					PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.DRAFT,
+					-1, new long[0], new long[0], _serviceContext())
+			).isInstanceOf(ProductValidationException.class);
+		}
+
+		@Test
+		@DisplayName("Dado inactive para draft, quando atualizar, entao aceita transicao")
+		void dado_inactiveParaDraft_quando_atualizar_entao_aceitaTransicao()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.INACTIVE);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.DRAFT,
+				STOCK_QUANTITY, new long[0], new long[0], _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+		@Test
+		@DisplayName("Dado inactive para published com categorias, quando atualizar, entao aceita transicao")
+		void dado_inactiveParaPublished_quando_atualizar_entao_aceitaTransicao()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.INACTIVE);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.PUBLISHED,
+				STOCK_QUANTITY, new long[] {CATEGORY_ID}, new long[0],
+				_serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.PUBLISHED);
+		}
+
+		@Test
+		@DisplayName("Dado draft para inactive, quando atualizar, entao aceita transicao")
+		void dado_draftParaInactive_quando_atualizar_entao_aceitaTransicao()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.INACTIVE,
+				STOCK_QUANTITY, new long[0], new long[0], _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.INACTIVE);
+		}
+
+		@Test
+		@DisplayName("Dado mesmo status, quando atualizar, entao aceita sem validar transicao")
+		void dado_mesmoStatus_quando_atualizar_entao_aceitaSemValidarTransicao()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.DRAFT,
+				STOCK_QUANTITY, new long[0], new long[0], _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+		@Test
+		@DisplayName("Dado published para inactive, quando atualizar, entao aceita transicao")
+		void dado_publishedParaInactive_quando_atualizar_entao_aceitaTransicao()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.PUBLISHED);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.INACTIVE,
+				STOCK_QUANTITY, new long[0], new long[0], _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.INACTIVE);
 		}
 
 	}
@@ -326,6 +846,51 @@ class ProductLocalServiceImplTest {
 			).isInstanceOf(ProductValidationException.class);
 		}
 
+		@Test
+		@DisplayName("Dado produto draft com assetEntry lancando excecao, quando atualizar, entao retorna array vazio de tags")
+		void dado_produtoDraftComAssetEntryFalhando_quando_atualizar_entao_retornaArrayVazioTags()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenThrow(
+					new PortalException("Asset not found"));
+
+			// Act
+			Product result = productLocalService.updateProductCategories(
+				PRODUCT_ID, new long[] {CATEGORY_ID}, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado categorias nulas, quando atualizar, entao aceita com array vazio")
+		void dado_categoriasNulas_quando_atualizar_entao_aceitaComArrayVazio()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getTagNames()).thenReturn(new String[0]);
+
+			// Act
+			Product result = productLocalService.updateProductCategories(
+				PRODUCT_ID, null, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
 	}
 
 	@Nested
@@ -389,6 +954,48 @@ class ProductLocalServiceImplTest {
 			).isInstanceOf(ProductTagException.class);
 		}
 
+		@Test
+		@DisplayName("Dado assetEntry lancando excecao ao buscar categories, quando atualizar tags, entao usa array vazio de categories")
+		void dado_assetEntryFalhando_quando_atualizarTags_entao_usaArrayVazioCategories()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenThrow(
+					new PortalException("Asset not found"));
+
+			// Act
+			Product result = productLocalService.updateProductTags(
+				PRODUCT_ID, new long[0], _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado tagIds nulos, quando atualizar, entao resolve como array vazio")
+		void dado_tagIdsNulos_quando_atualizar_entao_resolveComoArrayVazio()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[0]);
+
+			// Act
+			Product result = productLocalService.updateProductTags(
+				PRODUCT_ID, null, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
 	}
 
 	@Nested
@@ -441,6 +1048,50 @@ class ProductLocalServiceImplTest {
 				ProductStatusConstants.PUBLISHED);
 		}
 
+		@Test
+		@DisplayName("Dado published para inactive, quando atualizar status, entao aceita transicao")
+		void dado_publishedParaInactive_quando_atualizarStatus_entao_aceitaTransicao()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.PUBLISHED);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[] {CATEGORY_ID});
+			when(assetEntry.getTagNames()).thenReturn(new String[] {"tag-1"});
+
+			// Act
+			Product updated = productLocalService.updateProductStatus(
+				PRODUCT_ID, ProductStatusConstants.INACTIVE, _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.INACTIVE);
+		}
+
+		@Test
+		@DisplayName("Dado draft para published sem categorias, quando atualizar status, entao rejeita publicacao")
+		void dado_draftParaPublishedSemCategorias_quando_atualizarStatus_entao_rejeitaPublicacao()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[0]);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.updateProductStatus(
+					PRODUCT_ID, ProductStatusConstants.PUBLISHED, _serviceContext())
+			).isInstanceOf(ProductValidationException.class);
+		}
+
 	}
 
 	@Nested
@@ -448,8 +1099,8 @@ class ProductLocalServiceImplTest {
 	class DeleteProduct {
 
 		@Test
-		@DisplayName("Dado produto existente, quando remover, entao remove asset e persiste exclusao")
-		void dado_produtoExistente_quando_remover_entao_removeAssetEPersisteExclusao()
+		@DisplayName("Dado productId existente, quando remover por id, entao delega para remover por objeto")
+		void dado_productIdExistente_quando_removerPorId_entao_delegaParaRemoverPorObjeto()
 			throws Exception {
 
 			// Arrange
@@ -469,6 +1120,446 @@ class ProductLocalServiceImplTest {
 			verify(productPersistence).remove(product);
 		}
 
+		@Test
+		@DisplayName("Dado objeto produto, quando remover, entao remove asset e persiste exclusao")
+		void dado_objetoProduto_quando_remover_entao_removeAssetEPersisteExclusao()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.remove(any(Product.class))).thenReturn(product);
+
+			// Act
+			Product deletedProduct = productLocalService.deleteProduct(product);
+
+			// Assert
+			assertThat(deletedProduct).isSameAs(product);
+
+			verify(assetEntryLocalService).deleteEntry(
+				Product.class.getName(), PRODUCT_ID);
+			verify(productPersistence).remove(product);
+		}
+
+		@Test
+		@DisplayName("Dado falha ao deletar asset entry, quando remover, entao continua e remove produto")
+		void dado_falhaAoDeletarAssetEntry_quando_remover_entao_continuaERemoveProduto()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			doThrow(new PortalException("asset delete error")).when(
+				assetEntryLocalService).deleteEntry(
+					Product.class.getName(), PRODUCT_ID);
+			when(productPersistence.remove(any(Product.class))).thenReturn(product);
+
+			// Act
+			Product deletedProduct = productLocalService.deleteProduct(product);
+
+			// Assert
+			assertThat(deletedProduct).isSameAs(product);
+		}
+
+	}
+
+	@Nested
+	@DisplayName("Cobertura de branches de debug")
+	class DebugBranchCoverage {
+
+		private Log _originalLog;
+
+		@BeforeEach
+		void setUpDebugLog() throws Exception {
+			_originalLog = _getLogField();
+
+			Log debugLog = mock(Log.class);
+
+			when(debugLog.isDebugEnabled()).thenReturn(true);
+
+			_setLogField(debugLog);
+		}
+
+		@AfterEach
+		void tearDownDebugLog() throws Exception {
+			_setLogField(_originalLog);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e draft valido, quando adicionar produto, entao executa todos os paths de debug")
+		void dado_debugHabilitado_quando_adicionarProduto_entao_executaTodosPathsDeDebug()
+			throws Exception {
+
+			// Arrange
+			Product createdProduct = new ProductImpl();
+
+			createdProduct.setProductId(PRODUCT_ID);
+
+			when(counterLocalService.increment(Product.class.getName())).thenReturn(
+				PRODUCT_ID);
+			when(productPersistence.create(PRODUCT_ID)).thenReturn(createdProduct);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(userLocalService.getUser(USER_ID)).thenReturn(user);
+			when(user.getCompanyId()).thenReturn(COMPANY_ID);
+			when(user.getFullName()).thenReturn(USER_NAME);
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+
+			// Act
+			Product product = productLocalService.addProduct(
+				USER_ID, GROUP_ID, NAME, DESCRIPTION, PRICE,
+				ProductStatusConstants.DRAFT, STOCK_QUANTITY,
+				new long[] {CATEGORY_ID}, new long[0], _serviceContext());
+
+			// Assert
+			assertThat(product.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e draft valido, quando atualizar produto, entao executa todos os paths de debug")
+		void dado_debugHabilitado_quando_atualizarProduto_entao_executaTodosPathsDeDebug()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.DRAFT,
+				STOCK_QUANTITY, new long[0], new long[0], _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado, quando remover produto por id, entao executa path de debug")
+		void dado_debugHabilitado_quando_removerProdutoPorId_entao_executaPathDeDebug()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(productPersistence.remove(any(Product.class))).thenReturn(product);
+
+			// Act
+			Product deleted = productLocalService.deleteProduct(PRODUCT_ID);
+
+			// Assert
+			assertThat(deleted).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado, quando remover produto por objeto, entao executa path de debug")
+		void dado_debugHabilitado_quando_removerProdutoPorObjeto_entao_executaPathDeDebug()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.remove(any(Product.class))).thenReturn(product);
+
+			// Act
+			Product deleted = productLocalService.deleteProduct(product);
+
+			// Assert
+			assertThat(deleted).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado, quando atualizar status para published, entao executa path de debug completo")
+		void dado_debugHabilitado_quando_atualizarStatusParaPublished_entao_executaPathDeDebugCompleto()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[] {CATEGORY_ID});
+			when(assetEntry.getTagNames()).thenReturn(new String[] {"tag-1"});
+
+			// Act
+			Product updated = productLocalService.updateProductStatus(
+				PRODUCT_ID, ProductStatusConstants.PUBLISHED, _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.PUBLISHED);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado, quando atualizar categorias, entao executa path de debug")
+		void dado_debugHabilitado_quando_atualizarCategorias_entao_executaPathDeDebug()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetCategoryLocalService.fetchAssetCategory(CATEGORY_ID)).thenReturn(
+				assetCategory);
+			when(assetCategory.getGroupId()).thenReturn(GROUP_ID);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getTagNames()).thenReturn(new String[] {"tag"});
+
+			// Act
+			Product result = productLocalService.updateProductCategories(
+				PRODUCT_ID, new long[] {CATEGORY_ID}, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado, quando atualizar tags, entao executa path de debug")
+		void dado_debugHabilitado_quando_atualizarTags_entao_executaPathDeDebug()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetTagLocalService.fetchAssetTag(TAG_ID)).thenReturn(assetTag);
+			when(assetTag.getGroupId()).thenReturn(GROUP_ID);
+			when(assetTag.getName()).thenReturn("nova-tag");
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[0]);
+
+			// Act
+			Product result = productLocalService.updateProductTags(
+				PRODUCT_ID, new long[] {TAG_ID}, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado, quando buscar produtos por grupo, entao executa path de debug")
+		void dado_debugHabilitado_quando_buscarProdutosPorGrupo_entao_executaPathDeDebug() {
+
+			// Arrange
+			when(productPersistence.findByGroupId(GROUP_ID)).thenReturn(List.of());
+
+			// Act
+			List<Product> result = productLocalService.getProductsByGroupId(GROUP_ID);
+
+			// Assert
+			assertThat(result).isEmpty();
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e normalize com null, quando adicionar produto, entao persiste sem excecao")
+		void dado_debugHabilitadoENormalizeComNull_quando_adicionarProduto_entao_persisteSemExcecao()
+			throws Exception {
+
+			// Arrange
+			Product createdProduct = new ProductImpl();
+
+			createdProduct.setProductId(PRODUCT_ID);
+
+			when(counterLocalService.increment(Product.class.getName())).thenReturn(
+				PRODUCT_ID);
+			when(productPersistence.create(PRODUCT_ID)).thenReturn(createdProduct);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(userLocalService.getUser(USER_ID)).thenReturn(user);
+			when(user.getCompanyId()).thenReturn(COMPANY_ID);
+			when(user.getFullName()).thenReturn(USER_NAME);
+
+			// Act — passing null description triggers _normalize(null) path
+			Product product = productLocalService.addProduct(
+				USER_ID, GROUP_ID, NAME, null, PRICE, ProductStatusConstants.DRAFT,
+				STOCK_QUANTITY, new long[0], new long[0], _serviceContext());
+
+			// Assert — product is created successfully even with null description
+			assertThat(product.getProductId()).isEqualTo(PRODUCT_ID);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e assetEntry lancando excecao, quando atualizar tags, entao executa path de debug de excecao")
+		void dado_debugHabilitadoEAssetEntryFalhando_quando_atualizarTags_entao_executaPathDeDebugDeExcecao()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenThrow(
+					new PortalException("Asset not found"));
+
+			// Act
+			Product result = productLocalService.updateProductTags(
+				PRODUCT_ID, new long[0], _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e asset entry inexistente ao atualizar categorias, entao executa path de debug de excecao")
+		void dado_debugHabilitadoEAssetEntryInexistente_quando_atualizarCategorias_entao_executaPathDeDebugDeExcecao()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenThrow(
+					new PortalException("Asset not found"));
+
+			// Act
+			Product result = productLocalService.updateProductCategories(
+				PRODUCT_ID, null, _serviceContext());
+
+			// Assert
+			assertThat(result).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e asset entry lancando excecao ao buscar categories ao atualizar status, entao usa array vazio")
+		void dado_debugHabilitadoEAssetEntryFalhando_quando_atualizarStatus_entao_usaArrayVazio()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenThrow(
+					new PortalException("Asset not found"));
+
+			// Act
+			Product result = productLocalService.updateProductStatus(
+				PRODUCT_ID, ProductStatusConstants.INACTIVE, _serviceContext());
+
+			// Assert
+			assertThat(result.getStatus()).isEqualTo(ProductStatusConstants.INACTIVE);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e serviceContext nulo ao atualizar produto, entao cria novo serviceContext")
+		void dado_debugHabilitadoEServiceContextNulo_quando_atualizarProduto_entao_criaNovoeServiceContext()
+			throws Exception {
+
+			// Arrange
+			Product existing = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(existing);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+
+			// Act
+			Product updated = productLocalService.updateProduct(
+				PRODUCT_ID, NAME, DESCRIPTION, PRICE, ProductStatusConstants.DRAFT,
+				STOCK_QUANTITY, new long[0], new long[0], null);
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e falha ao deletar asset, quando remover produto, entao executa path de debug de excecao")
+		void dado_debugHabilitadoEFalhaAoDeletarAsset_quando_removerProduto_entao_executaPathDeDebugDeExcecao()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			doThrow(new PortalException("asset delete error")).when(
+				assetEntryLocalService).deleteEntry(
+					Product.class.getName(), PRODUCT_ID);
+			when(productPersistence.remove(any(Product.class))).thenReturn(product);
+
+			// Act
+			Product deleted = productLocalService.deleteProduct(product);
+
+			// Assert
+			assertThat(deleted).isSameAs(product);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e transicao invalida, quando atualizar status, entao lanca excecao com mensagem de debug")
+		void dado_debugHabilitadoETransicaoInvalida_quando_atualizarStatus_entao_lancaExcecaoComMensagemDeDebug()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.PUBLISHED);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+
+			// Act / Assert
+			assertThatThrownBy(
+				() -> productLocalService.updateProductStatus(
+					PRODUCT_ID, ProductStatusConstants.DRAFT, _serviceContext())
+			).isInstanceOf(ProductStatusException.class);
+		}
+
+		@Test
+		@DisplayName("Dado debug habilitado e mesmo status, quando atualizar status, entao executa path de debug de status inalterado")
+		void dado_debugHabilitadoEMesmoStatus_quando_atualizarStatus_entao_executaPathDeDebugStatusInalterado()
+			throws Exception {
+
+			// Arrange
+			Product product = _product(ProductStatusConstants.DRAFT);
+
+			when(productPersistence.findByPrimaryKey(PRODUCT_ID)).thenReturn(product);
+			when(productPersistence.update(any(Product.class))).thenAnswer(
+				invocation -> invocation.getArgument(0));
+			when(assetEntryLocalService.getEntry(
+				Product.class.getName(), PRODUCT_ID)).thenReturn(assetEntry);
+			when(assetEntry.getCategoryIds()).thenReturn(new long[0]);
+			when(assetEntry.getTagNames()).thenReturn(new String[0]);
+
+			// Act
+			Product updated = productLocalService.updateProductStatus(
+				PRODUCT_ID, ProductStatusConstants.DRAFT, _serviceContext());
+
+			// Assert
+			assertThat(updated.getStatus()).isEqualTo(ProductStatusConstants.DRAFT);
+		}
+
+	}
+
+	private Log _getLogField() throws Exception {
+		Field field = ProductLocalServiceImpl.class.getDeclaredField("_log");
+
+		field.setAccessible(true);
+
+		return (Log)field.get(null);
+	}
+
+	private void _setLogField(Log log) throws Exception {
+		Field field = ProductLocalServiceImpl.class.getDeclaredField("_log");
+
+		field.setAccessible(true);
+
+		// Use Unsafe to write to a static final field on Java 11+
+		Field unsafeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+
+		unsafeField.setAccessible(true);
+
+		sun.misc.Unsafe unsafe = (sun.misc.Unsafe)unsafeField.get(null);
+
+		Object staticFieldBase = unsafe.staticFieldBase(field);
+		long staticFieldOffset = unsafe.staticFieldOffset(field);
+
+		unsafe.putObject(staticFieldBase, staticFieldOffset, log);
 	}
 
 	private Product _product(int status) {
