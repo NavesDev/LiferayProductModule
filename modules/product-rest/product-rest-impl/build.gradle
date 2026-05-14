@@ -1,3 +1,5 @@
+apply plugin: 'jacoco'
+
 dependencies {
 	api project(":modules:product-rest:product-rest-api")
 
@@ -23,3 +25,71 @@ test {
 	)
 	useJUnitPlatform()
 }
+
+jacoco {
+    toolVersion = '0.8.11'
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        html.required = true
+        xml.required = false
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/resource/v1_0/Base*',
+                    '**/dto/v1_0/**',
+                    '**/graphql/**',
+                    '**/jaxrs/**',
+                    '**/security/**',
+                    '**/resource/v1_0/factory/**',
+                    '**/resource/v1_0/OpenAPI*',
+                ])
+            })
+        )
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/resource/v1_0/Base*',
+                    '**/dto/v1_0/**',
+                    '**/graphql/**',
+                    '**/jaxrs/**',
+                    '**/security/**',
+                    '**/resource/v1_0/factory/**',
+                    '**/resource/v1_0/OpenAPI*',
+                ])
+            })
+        )
+    }
+
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.70
+            }
+        }
+        rule {
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.55
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
