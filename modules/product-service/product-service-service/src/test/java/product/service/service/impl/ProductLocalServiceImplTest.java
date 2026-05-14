@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -159,8 +160,8 @@ class ProductLocalServiceImplTest {
 			assertThat(persistedProduct.getUserName()).isEqualTo(USER_NAME);
 
 			verify(assetEntryLocalService).updateEntry(
-				anyLong(), anyLong(), any(Date.class), any(Date.class),
-				anyString(), anyLong(), anyString(), anyLong(),
+				eq(USER_ID), eq(GROUP_ID), any(Date.class), any(Date.class),
+				eq(Product.class.getName()), eq(PRODUCT_ID), anyString(), eq(0L),
 				aryEq(new long[] {CATEGORY_ID}), aryEq(new String[] {"tag-1"}),
 				anyBoolean(), anyBoolean(), nullable(Date.class),
 				nullable(Date.class), nullable(Date.class), nullable(Date.class),
@@ -297,8 +298,8 @@ class ProductLocalServiceImplTest {
 			assertThat(result).isSameAs(product);
 
 			verify(assetEntryLocalService).updateEntry(
-				anyLong(), anyLong(), any(Date.class), any(Date.class),
-				anyString(), anyLong(), anyString(), anyLong(),
+				eq(USER_ID), eq(GROUP_ID), any(Date.class), any(Date.class),
+				eq(Product.class.getName()), eq(PRODUCT_ID), anyString(), eq(0L),
 				aryEq(new long[] {CATEGORY_ID}), any(String[].class),
 				anyBoolean(), anyBoolean(), nullable(Date.class),
 				nullable(Date.class), nullable(Date.class), nullable(Date.class),
@@ -355,8 +356,8 @@ class ProductLocalServiceImplTest {
 			assertThat(result).isSameAs(product);
 
 			verify(assetEntryLocalService).updateEntry(
-				anyLong(), anyLong(), any(Date.class), any(Date.class),
-				anyString(), anyLong(), anyString(), anyLong(),
+				eq(USER_ID), eq(GROUP_ID), any(Date.class), any(Date.class),
+				eq(Product.class.getName()), eq(PRODUCT_ID), anyString(), eq(0L),
 				any(long[].class), aryEq(new String[] {"nova-tag"}),
 				anyBoolean(), anyBoolean(), nullable(Date.class),
 				nullable(Date.class), nullable(Date.class), nullable(Date.class),
