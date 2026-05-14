@@ -653,17 +653,20 @@ class ProductResourceImplTest {
 			throws Exception {
 
 			// Arrange
-			List<product.service.model.Product> allProducts = new java.util.ArrayList<>();
+			ProductImpl p1 = _product(1L, "Produto 1", 1);
+			ProductImpl p2 = _product(2L, "Produto 2", 2);
+			ProductImpl p3 = _product(3L, "Produto 3", 3);
+			ProductImpl p4 = _product(4L, "Produto 4", 4);
+			ProductImpl p5 = _product(5L, "Produto 5", 5);
 
-			for (int i = 1; i <= 5; i++) {
-				allProducts.add(_product((long) i, "Produto " + i, i));
-			}
+			when(_productLocalService.getProductsByGroupId(SITE_ID)).thenReturn(
+				List.of(p1, p2, p3, p4, p5));
 
-			when(_productLocalService.getProductsByGroupId(SITE_ID)).thenReturn(allProducts);
-
-			for (int i = 1; i <= 5; i++) {
-				_stubAssetEntry((long) i);
-			}
+			_stubAssetEntry(1L);
+			_stubAssetEntry(2L);
+			_stubAssetEntry(3L);
+			_stubAssetEntry(4L);
+			_stubAssetEntry(5L);
 
 			Pagination pagination = mock(Pagination.class);
 
