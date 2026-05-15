@@ -32,6 +32,8 @@ import product.rest.dto.v1_0.Product;
 import product.rest.dto.v1_0.ProductCategories;
 import product.rest.dto.v1_0.ProductTags;
 import product.rest.resource.v1_0.ProductResource;
+import product.service.exception.ProductStatusException;
+import product.service.exception.ProductValidationException;
 import product.service.model.ProductStatusConstants;
 import product.service.service.ProductLocalService;
 
@@ -145,7 +147,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 					"getSiteProductsPage start position out of range: " + start);
 			}
 
-			return Page.of(new ArrayList<>());
+			return Page.of(new ArrayList<>(), pagination, (long) filtered.size());
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -154,7 +156,8 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 					", end=" + end);
 		}
 
-		return Page.of(filtered.subList(start, end));
+		return Page.of(
+			filtered.subList(start, end), pagination, (long) filtered.size());
 	}
 
 	@Override
@@ -165,21 +168,26 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		_validatePayload(product);
 
-		product.service.model.Product createdProduct = _productLocalService.addProduct(
-			contextUser.getUserId(), siteId, product.getName(),
-			product.getDescription(), _defaultDouble(product.getPrice()),
-			_toStatus(product.getStatus()), _defaultInteger(product.getStockQuantity()),
-			_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
-			_createServiceContext(siteId));
+		try {
+			product.service.model.Product createdProduct = _productLocalService.addProduct(
+				contextUser.getUserId(), siteId, product.getName(),
+				product.getDescription(), _defaultDouble(product.getPrice()),
+				_toStatus(product.getStatus()), _defaultInteger(product.getStockQuantity()),
+				_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
+				_createServiceContext(siteId));
 
-		Product dtoProduct = _toDTO(createdProduct, siteId);
+			Product dtoProduct = _toDTO(createdProduct, siteId);
 
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"postSiteProduct completed for productId=" + dtoProduct.getId());
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"postSiteProduct completed for productId=" + dtoProduct.getId());
+			}
+
+			return dtoProduct;
 		}
-
-		return dtoProduct;
+		catch (ProductValidationException | ProductStatusException e) {
+			throw new BadRequestException(e.getMessage(), e);
+		}
 	}
 
 	@Override
@@ -195,21 +203,26 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		_validatePayload(product);
 		_validateProductSite(siteId, productId);
 
-		product.service.model.Product updatedProduct = _productLocalService.updateProduct(
-			productId, product.getName(), product.getDescription(),
-			_defaultDouble(product.getPrice()), _toStatus(product.getStatus()),
-			_defaultInteger(product.getStockQuantity()),
-			_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
-			_createServiceContext(siteId));
+		try {
+			product.service.model.Product updatedProduct = _productLocalService.updateProduct(
+				productId, product.getName(), product.getDescription(),
+				_defaultDouble(product.getPrice()), _toStatus(product.getStatus()),
+				_defaultInteger(product.getStockQuantity()),
+				_toLongArray(product.getCategoryIds()), _toLongArray(product.getTagIds()),
+				_createServiceContext(siteId));
 
-		Product dtoProduct = _toDTO(updatedProduct, siteId);
+			Product dtoProduct = _toDTO(updatedProduct, siteId);
 
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"putSiteProduct completed for productId=" + dtoProduct.getId());
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"putSiteProduct completed for productId=" + dtoProduct.getId());
+			}
+
+			return dtoProduct;
 		}
-
-		return dtoProduct;
+		catch (ProductValidationException | ProductStatusException e) {
+			throw new BadRequestException(e.getMessage(), e);
+		}
 	}
 
 	@Override
@@ -416,10 +429,13 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			return true;
 		}
 
-		String normalizedSearch = _lower(search);
+		String normalizedSearch = search.toLowerCase();
 
-		return StringUtil.containsIgnoreCase(product.getName(), normalizedSearch) ||
-			StringUtil.containsIgnoreCase(product.getDescription(), normalizedSearch);
+		String name = (product.getName() != null) ? product.getName().toLowerCase() : "";
+		String description =
+			(product.getDescription() != null) ? product.getDescription().toLowerCase() : "";
+
+		return name.contains(normalizedSearch) || description.contains(normalizedSearch);
 	}
 
 	private boolean _matchesStatus(Product product, String status) {
