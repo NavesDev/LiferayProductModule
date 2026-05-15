@@ -1,3 +1,5 @@
+apply plugin: 'jacoco'
+
 dependencies {
 	api project(":modules:product-service:product-service-api")
 
@@ -25,3 +27,63 @@ test {
 	)
 	useJUnitPlatform()
 }
+
+jacoco {
+	toolVersion = '0.8.11'
+}
+
+jacocoTestReport {
+	dependsOn test
+
+	reports {
+		html.required = true
+		xml.required = false
+	}
+
+	afterEvaluate {
+		classDirectories.setFrom(
+			files(classDirectories.files.collect {
+				fileTree(dir: it, exclude: [
+					'**/service/base/**',
+					'**/model/impl/**',
+					'**/service/persistence/impl/**',
+				])
+			})
+		)
+	}
+}
+
+jacocoTestCoverageVerification {
+	dependsOn jacocoTestReport
+
+	afterEvaluate {
+		classDirectories.setFrom(
+			files(classDirectories.files.collect {
+				fileTree(dir: it, exclude: [
+					'**/service/base/**',
+					'**/model/impl/**',
+					'**/service/persistence/impl/**',
+				])
+			})
+		)
+	}
+
+	violationRules {
+		rule {
+			limit {
+				counter = 'LINE'
+				value = 'COVEREDRATIO'
+				minimum = 0.75
+			}
+		}
+		rule {
+			limit {
+				counter = 'BRANCH'
+				value = 'COVEREDRATIO'
+				minimum = 0.65
+			}
+		}
+	}
+}
+
+check.dependsOn jacocoTestCoverageVerification
