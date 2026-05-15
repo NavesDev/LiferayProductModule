@@ -1,9 +1,15 @@
+import uuid
 import pytest
 from helpers.api_client import ApiClient
 
 pytestmark = pytest.mark.associations
 
-_PAYLOAD_BASE = {"name": "Produto Associacoes E2E", "status": "draft"}
+
+def _payload(**overrides) -> dict:
+    """Gera payload com nome único para isolar dados entre testes."""
+    uid = uuid.uuid4().hex[:8].upper()
+    base = {"name": f"Produto Assoc E2E {uid}", "status": "draft"}
+    return {**base, **overrides}
 
 
 class TestAtualizarCategorias:
@@ -12,7 +18,7 @@ class TestAtualizarCategorias:
     ):
         """E2E-A01"""
         # Arrange
-        produto = product_factory(_PAYLOAD_BASE)
+        produto = product_factory(_payload())
         pid = produto["id"]
 
         # Act
@@ -27,7 +33,7 @@ class TestAtualizarCategorias:
     ):
         """E2E-A03"""
         # Arrange
-        produto = product_factory(_PAYLOAD_BASE)
+        produto = product_factory(_payload())
         pid = produto["id"]
 
         # Act
@@ -43,7 +49,7 @@ class TestAtualizarTags:
     ):
         """E2E-A02"""
         # Arrange
-        produto = product_factory(_PAYLOAD_BASE)
+        produto = product_factory(_payload())
         pid = produto["id"]
 
         # Act
@@ -58,7 +64,7 @@ class TestAtualizarTags:
     ):
         """E2E-A04"""
         # Arrange
-        produto = product_factory(_PAYLOAD_BASE)
+        produto = product_factory(_payload())
         pid = produto["id"]
 
         # Act

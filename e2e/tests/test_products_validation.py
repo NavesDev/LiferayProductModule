@@ -1,7 +1,14 @@
+import uuid
 import pytest
 from helpers.api_client import ApiClient
 
 pytestmark = pytest.mark.validation
+
+
+def _payload(**overrides) -> dict:
+    """Gera payload mínimo com nome único para isolar dados entre testes."""
+    uid = uuid.uuid4().hex[:8].upper()
+    return {"name": f"Produto Defaults E2E {uid}", **overrides}
 
 
 class TestValoresDefault:
@@ -9,24 +16,30 @@ class TestValoresDefault:
         self, product_factory
     ):
         """E2E-V01a"""
-        produto = product_factory({"name": "Produto Defaults E2E"})
+        # Arrange / Act
+        produto = product_factory(_payload())
 
+        # Assert
         assert produto["price"] == 0.0
 
     def test_dado_payload_so_com_nome__quando_criar__entao_stockQuantity_e_zero(
         self, product_factory
     ):
         """E2E-V01b"""
-        produto = product_factory({"name": "Produto Defaults E2E"})
+        # Arrange / Act
+        produto = product_factory(_payload())
 
+        # Assert
         assert produto["stockQuantity"] == 0
 
     def test_dado_payload_so_com_nome__quando_criar__entao_status_e_draft(
         self, product_factory
     ):
         """E2E-V01c"""
-        produto = product_factory({"name": "Produto Defaults E2E"})
+        # Arrange / Act
+        produto = product_factory(_payload())
 
+        # Assert
         assert produto["status"] == "draft"
 
 
@@ -46,7 +59,7 @@ class TestPayloadInvalido:
     ):
         """E2E-V03"""
         # Arrange
-        produto = product_factory({"name": "Produto UpdateNulo E2E"})
+        produto = product_factory(_payload())
         pid = produto["id"]
 
         # Act
@@ -64,7 +77,7 @@ class TestSiteIdInvalido:
         # Act
         resp = api.post(
             "/o/product-rest/v1.0/sites/999999999/products",
-            json={"name": "Produto SiteInvalido"},
+            json=_payload(),
         )
 
         # Assert
@@ -87,7 +100,7 @@ class TestProdutoDeOutroSite:
     ):
         """E2E-V06"""
         # Arrange
-        produto = product_factory({"name": "Produto OutroSite E2E"})
+        produto = product_factory(_payload())
         pid = produto["id"]
 
         # Act

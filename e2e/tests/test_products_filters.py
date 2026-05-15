@@ -6,7 +6,7 @@ pytestmark = pytest.mark.filters
 
 
 def _uid() -> str:
-    """Gera sufixo unico para isolar dados entre runs paralelas."""
+    """Gera sufixo único para isolar dados entre runs."""
     return uuid.uuid4().hex[:8].upper()
 
 
@@ -39,7 +39,7 @@ class TestFiltrarPorStatus:
     def test_dado_produto_published__quando_filtrar_status_published__entao_retorna_apenas_published(
         self, api: ApiClient, products_url: str, product_factory, category_id: int
     ):
-        """E2E-F02 — published requires description + at least one categoryId"""
+        """E2E-F02 — published exige description + pelo menos um categoryId"""
         # Arrange
         uid = _uid()
         product_factory({
@@ -62,7 +62,7 @@ class TestFiltrarPorStatus:
     def test_dado_produto_draft__quando_filtrar_status_draft__entao_retorna_apenas_draft(
         self, api: ApiClient, products_url: str, product_factory
     ):
-        """E2E-F03 — uses inactive as counter-product (no extra validation required)"""
+        """E2E-F03 — usa inactive como contraponto (sem validações extras)"""
         # Arrange
         uid = _uid()
         product_factory({"name": f"Draft {uid}", "status": "draft"})

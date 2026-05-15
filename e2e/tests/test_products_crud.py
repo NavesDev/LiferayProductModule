@@ -4,13 +4,18 @@ from helpers.api_client import ApiClient
 
 pytestmark = pytest.mark.crud
 
-_PAYLOAD_BASE = {
-    "name": "Produto E2E CRUD",
-    "description": "Descricao de teste",
-    "price": 49.90,
-    "status": "draft",
-    "stockQuantity": 10,
-}
+
+def _payload(**overrides) -> dict:
+    """Gera payload com nome único para isolar dados entre testes."""
+    uid = uuid.uuid4().hex[:8].upper()
+    base = {
+        "name": f"Produto E2E CRUD {uid}",
+        "description": "Descricao de teste",
+        "price": 49.90,
+        "status": "draft",
+        "stockQuantity": 10,
+    }
+    return {**base, **overrides}
 
 
 class TestCriarProduto:
@@ -18,20 +23,30 @@ class TestCriarProduto:
         self, product_factory
     ):
         """E2E-C01a"""
-        produto = product_factory(_PAYLOAD_BASE)
+        # Arrange
+        payload = _payload()
 
+        # Act
+        produto = product_factory(payload)
+
+        # Assert
         assert produto["id"] > 0
 
     def test_dado_payload_valido__quando_criar_produto__entao_campos_correspondem_ao_payload(
         self, product_factory
     ):
         """E2E-C01b"""
-        produto = product_factory(_PAYLOAD_BASE)
+        # Arrange
+        payload = _payload()
 
-        assert produto["name"] == _PAYLOAD_BASE["name"]
-        assert produto["price"] == _PAYLOAD_BASE["price"]
+        # Act
+        produto = product_factory(payload)
+
+        # Assert
+        assert produto["name"] == payload["name"]
+        assert produto["price"] == payload["price"]
         assert produto["status"] == "draft"
-        assert produto["stockQuantity"] == _PAYLOAD_BASE["stockQuantity"]
+        assert produto["stockQuantity"] == payload["stockQuantity"]
 
 
 class TestBuscarProduto:
@@ -40,7 +55,8 @@ class TestBuscarProduto:
     ):
         """E2E-C02"""
         # Arrange
-        criado = product_factory(_PAYLOAD_BASE)
+        payload = _payload()
+        criado = product_factory(payload)
         pid = criado["id"]
 
         # Act
@@ -50,20 +66,20 @@ class TestBuscarProduto:
         assert resp.status_code == 200
         data = resp.json()
         assert data["id"] == pid
-        assert data["name"] == _PAYLOAD_BASE["name"]
-        assert data["description"] == _PAYLOAD_BASE["description"]
+        assert data["name"] == payload["name"]
+        assert data["description"] == payload["description"]
 
     def test_dado_produto_criado__quando_listar_produtos__entao_produto_aparece_na_lista(
         self, api: ApiClient, products_url: str, product_factory
     ):
-        """E2E-C03"""
-        # Arrange — unique suffix isolates this product from others in DB
-        uid = uuid.uuid4().hex[:8].upper()
-        criado = product_factory({**_PAYLOAD_BASE, "name": f"Produto E2E CRUD {uid}"})
+        """E2E-C03 — busca por nome único para não depender da paginação padrão"""
+        # Arrange
+        payload = _payload()
+        criado = product_factory(payload)
         pid = criado["id"]
 
         # Act
-        resp = api.get(products_url, params={"search": uid})
+        resp = api.get(products_url, params={"search": payload["name"]})
 
         # Assert
         assert resp.status_code == 200
@@ -77,26 +93,29 @@ class TestAtualizarProduto:
     ):
         """E2E-C04a"""
         # Arrange
-        criado = product_factory(_PAYLOAD_BASE)
+        payload = _payload()
+        criado = product_factory(payload)
         pid = criado["id"]
+        novo_nome = f"Nome Atualizado {uuid.uuid4().hex[:6].upper()}"
 
         # Act
-        resp = api.put(f"{products_url}/{pid}", json={**_PAYLOAD_BASE, "name": "Nome Atualizado"})
+        resp = api.put(f"{products_url}/{pid}", json={**payload, "name": novo_nome})
 
         # Assert
         assert resp.status_code == 200
-        assert resp.json()["name"] == "Nome Atualizado"
+        assert resp.json()["name"] == novo_nome
 
     def test_dado_produto_criado__quando_atualizar_preco__entao_preco_reflete_novo_valor(
         self, api: ApiClient, products_url: str, product_factory
     ):
         """E2E-C04b"""
         # Arrange
-        criado = product_factory(_PAYLOAD_BASE)
+        payload = _payload()
+        criado = product_factory(payload)
         pid = criado["id"]
 
         # Act
-        resp = api.put(f"{products_url}/{pid}", json={**_PAYLOAD_BASE, "price": 99.99})
+        resp = api.put(f"{products_url}/{pid}", json={**payload, "price": 99.99})
 
         # Assert
         assert resp.status_code == 200
@@ -109,7 +128,7 @@ class TestDeletarProduto:
     ):
         """E2E-C05"""
         # Arrange
-        criado = product_factory(_PAYLOAD_BASE)
+        criado = product_factory(_payload())
         pid = criado["id"]
 
         # Act
@@ -121,9 +140,9 @@ class TestDeletarProduto:
     def test_dado_produto_deletado__quando_buscar_por_id__entao_retorna_erro(
         self, api: ApiClient, products_url: str, product_factory
     ):
-        """E2E-C06 — produto deletado pelo proprio teste; factory nao tenta deletar novamente"""
+        """E2E-C06 — produto deletado pelo próprio teste; factory não tenta deletar novamente"""
         # Arrange
-        criado = product_factory(_PAYLOAD_BASE)
+        criado = product_factory(_payload())
         pid = criado["id"]
         api.delete(f"{products_url}/{pid}")
 
