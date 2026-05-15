@@ -37,12 +37,17 @@ class TestFiltrarPorSearch:
 
 class TestFiltrarPorStatus:
     def test_dado_produto_published__quando_filtrar_status_published__entao_retorna_apenas_published(
-        self, api: ApiClient, products_url: str, product_factory
+        self, api: ApiClient, products_url: str, product_factory, category_id: int
     ):
-        """E2E-F02"""
+        """E2E-F02 — published requires description + at least one categoryId"""
         # Arrange
         uid = _uid()
-        product_factory({"name": f"Published {uid}", "status": "published"})
+        product_factory({
+            "name": f"Published {uid}",
+            "description": f"Descricao published {uid}",
+            "status": "published",
+            "categoryIds": [category_id],
+        })
         product_factory({"name": f"Draft {uid}", "status": "draft"})
 
         # Act
@@ -57,11 +62,11 @@ class TestFiltrarPorStatus:
     def test_dado_produto_draft__quando_filtrar_status_draft__entao_retorna_apenas_draft(
         self, api: ApiClient, products_url: str, product_factory
     ):
-        """E2E-F03"""
+        """E2E-F03 — uses inactive as counter-product (no extra validation required)"""
         # Arrange
         uid = _uid()
         product_factory({"name": f"Draft {uid}", "status": "draft"})
-        product_factory({"name": f"Published {uid}", "status": "published"})
+        product_factory({"name": f"Inactive {uid}", "status": "inactive"})
 
         # Act
         resp = api.get(products_url, params={"search": uid, "status": "draft"})

@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from helpers.api_client import ApiClient
 
@@ -56,12 +57,13 @@ class TestBuscarProduto:
         self, api: ApiClient, products_url: str, product_factory
     ):
         """E2E-C03"""
-        # Arrange
-        criado = product_factory(_PAYLOAD_BASE)
+        # Arrange — unique suffix isolates this product from others in DB
+        uid = uuid.uuid4().hex[:8].upper()
+        criado = product_factory({**_PAYLOAD_BASE, "name": f"Produto E2E CRUD {uid}"})
         pid = criado["id"]
 
         # Act
-        resp = api.get(products_url)
+        resp = api.get(products_url, params={"search": uid})
 
         # Assert
         assert resp.status_code == 200
